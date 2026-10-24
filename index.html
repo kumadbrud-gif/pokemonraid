@@ -201,10 +201,11 @@ input[type=checkbox]{width:20px;height:20px;padding:0;accent-color:#3c78d8;flex:
 .rcard{position:relative;border:3px solid var(--ink);border-radius:10px;background:linear-gradient(#ffffff,#efe9da);overflow:hidden;aspect-ratio:1/1.1;container-type:inline-size}
 .rcard .band{position:absolute;left:0;right:0;bottom:0;height:20%;display:flex;align-items:center;justify-content:center;font-size:9cqw;letter-spacing:.06em;overflow:hidden;white-space:nowrap;border-top:2px solid rgba(0,0,0,.15)}
 .rcard .stage{position:absolute;inset:4% 4% 16% 4%}
-.rcard .stage img{position:absolute;left:50%;top:50%;width:80%;height:auto;aspect-ratio:1;transform:translate(-50%,-50%)}
+.rcard .stage img.spr{position:absolute;left:50%;top:50%;width:80%;height:auto;aspect-ratio:1;transform:translate(-50%,-50%)}
 .rcard .egg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:34cqw}
-.rcard .acc{position:absolute;font-size:19cqw;line-height:1;transform:translate(-50%,-50%) scale(var(--s,1));filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
-.acc.head{left:50%;top:16%}.acc.face{left:50%;top:47%;font-size:15cqw}.acc.hold{left:80%;top:76%}.acc.aura{left:17%;top:20%}
+.rcard .stage img.acc{position:absolute;width:calc(var(--w,12)*1.7cqw);height:auto;transform:translate(-50%,-50%) scale(var(--s,1));image-rendering:pixelated;image-rendering:crisp-edges}
+.acc.head{left:50%;top:16%}.acc.face{left:50%;top:47%}
+.rcard .stage img.acc.face{width:calc(var(--w,12)*1.4cqw)}.acc.hold{left:80%;top:76%}.acc.aura{left:17%;top:20%}
 .repbig{max-width:320px;margin:0 auto}
 .phead{display:flex;align-items:center;gap:12px;margin:0 0 16px}
 .phead h2{margin:0;color:#fff}
@@ -265,6 +266,12 @@ textarea{font:inherit;border:3px solid var(--ink);border-radius:6px;padding:8px 
 .szrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .szname{min-width:130px}
 .szrow b{min-width:3.2em;text-align:center}
+.pxi{image-rendering:pixelated;image-rendering:crisp-edges;vertical-align:middle}
+.rcard .band{gap:2cqw}
+.bandi{height:62%;width:auto;image-rendering:pixelated;image-rendering:crisp-edges;flex:none}
+.pxstars{position:absolute;inset:0 0 20% 0;background-image:radial-gradient(#fff 0 .7cqw,transparent .8cqw),radial-gradient(#ffe88a 0 .5cqw,transparent .6cqw);background-size:23cqw 19cqw,31cqw 27cqw;background-position:4cqw 3cqw,15cqw 11cqw;opacity:.85}
+.swatch{display:inline-block;width:22px;height:16px;border:2px solid var(--ink);border-radius:3px;vertical-align:middle}
+.reveal .pxi{animation:pop .6s steps(6)}
 /* 결과 */
 .result{text-align:center;padding:28px 18px;max-width:680px;margin:0 auto}
 .result .rspr img{width:min(60vw,288px);height:auto;aspect-ratio:1}
@@ -719,6 +726,396 @@ function power(st,id){const b=GD.bst[id]||null,bonus=((st&&st.boosts)||{})["p"+i
 function powText(p){return p.total?`${p.total}${p.bonus?` (+${p.bonus})`:""}`:(GD.failed?"정보 없음":"불러오는 중")+(p.bonus?` (+${p.bonus})`:"");}
 function josaRo(w){const c=w.charCodeAt(w.length-1);if(c>=0xAC00&&c<=0xD7A3){const j=(c-0xAC00)%28;return w+(j&&j!==8?"으로":"로");}return w+"(으)로";}
 
+/* ---------------- 도트 꾸미기 그림 ----------------
+   한 글자가 한 칸(픽셀)이에요. "."은 투명. 글자별 색은 PXPAL에 있어요. */
+const PXPAL={k:"#2a2232",e:"#45404f",w:"#ffffff",s:"#c8ccd8",S:"#8a90a0",r:"#e83a3a",R:"#a82030",p:"#ff9ac0",P:"#e0609a",
+  o:"#ff9a3a",y:"#ffd23a",Y:"#d8a020",g:"#5ac85a",G:"#2e8a3e",b:"#4a8ae8",B:"#2a5ab0",c:"#9ad8ff",v:"#b07ae8",V:"#7a4ab8",
+  n:"#a8703a",N:"#6a4420",l:"#ffe0c8",x:"#ff6a3a"};
+const flower=(X,D,Z)=>`
+....kkk....
+...kXXXk...
+.kkkXXXkkk.
+kXXXkXkXXXk
+kXXDZZZDXXk
+.kkXZZZXkk.
+.kXXkZkXXk.
+.kXXDkDXXk.
+..kkk.kkk..`.replace(/X/g,X).replace(/D/g,D).replace(/Z/g,Z);
+const PX={
+ribbon:`
+.kk.......kk.
+krrk.....krrk
+krrrkkkkkrrrk
+krwrkRRRkrrrk
+krrrkRRRkrrrk
+krrrkkkkkrrrk
+.krrk.k.krrk.
+..kk.krk.kk..
+....krrrk....
+....kRkRk....
+.....k.k.....`,
+crown:`
+.k....kk....k.
+kyk..kyyk..kyk
+kyyk.kyyk.kyyk
+kyyykyyyykyyyk
+kyyyyyyyyyyyyk
+kyryyyybyyyryk
+kyyyyyyyyyyyyk
+kYYYYYYYYYYYYk
+.kkkkkkkkkkkk.`,
+tophat:`
+..kkkkkkkk..
+..keeeeeek..
+..kewweeek..
+..keeeeeek..
+..keeeeeek..
+..keeeeeek..
+..krrrrrrk..
+..keeeeeek..
+kkkkkkkkkkkk
+keeeeeeeeeek
+.kkkkkkkkkk.`,
+sakura:flower("p","P","y"),
+sunflower:flower("y","Y","N"),
+hibiscus:flower("r","R","y"),
+tulip:`
+.k..k..k.
+kpk.kpk.kpk
+kppkpppkppk
+kpppppppppk
+kpwppppppPk
+.kpppppPPk.
+..kpppPPk..
+...kkkkk...
+....kgk....
+..kkkgk....
+.kgggkk....
+..kkk......`,
+gradcap:`
+......kk......
+....kkeekk....
+..kkeeeeeekk..
+kkeeeeeeeeeekk
+.kkeeeeeeeekkY
+...keeeeeek.kY
+...keeeeeek.kY
+...kkkkkkkk.YY`,
+cap:`
+....kkkkk.....
+...kbbbbbk....
+..kbbbwbbbk...
+..kbbbbbbbk...
+..kbbbbbbbbk..
+..kBBBBBBBBkkk
+..kkkkkkkkkbbbk
+..........kkkk.`,
+santa:`
+..........kk.
+........kkwwk
+......kkrrkwk
+....kkrrrrk..
+...krrrrrrk..
+..krrrrrrrrk.
+.kwwwwwwwwwwk
+.kwswwswwswwk
+..kkkkkkkkkk.`,
+shades:`
+kkkkkkkkkkkkkkk
+kewweek.kewweek
+keeeeek.keeeeek
+.keeek...keeek.
+..kkk.....kkk..`,
+glasses:`
+.kkk.....kkk.
+k...k...k...k
+k.c..kkk..c.k
+k...k...k...k
+.kkk.....kkk.`,
+blush:`
+.kk.kk.
+kppkppk
+kpwpppk
+kpppppk
+.kpppk.
+..kpk..
+...k...`,
+starsticker:`
+.....k.....
+....kyk....
+....kyk....
+kkkkkyykkkk
+kyyyywyyyyk
+.kyyyyyyyk.
+..kyyyyyk..
+..kyyyyyk..
+.kyyykyyyk.
+.kyyk.kyyk.
+.kkk...kkk.`,
+balloon:`
+..kkkk..
+.krrrrk.
+krwrrrrk
+krwrrrrk
+krrrrrrk
+krrrrrRk
+.krrrRk.
+..kRRk..
+...kk...
+....k...
+...k....
+....k...
+...k....`,
+lolly:`
+.kkkkk.
+kpwpwpk
+kwpppwk
+kpwpwpk
+kwpppwk
+.kkkkk.
+...s...
+...s...
+...s...
+...s...
+...S...`,
+rose:`
+..kkkk..
+.krrRrk.
+krRrrRrk
+krrRRrrk
+.krrrrk.
+..kRRk..
+...kgk..
+.kkkgk..
+kggkgk..
+.kkkgk..
+...kgk..
+...kk...`,
+clover:`
+.kk...kk.
+kggk.kggk
+kgwgkgggk
+.kgggggk.
+kgggkgggk
+kggk.kGGk
+.kk.k.kk.
+....k....
+...k.....
+..k......`,
+bouquet:`
+.kk.kk.kk.
+krrkyykppk
+krrkyykppk
+.kkkkkkkk.
+.kgkGkgk..
+..kwwwwk..
+..kwpwwk..
+..kwwwwk..
+...kwwk...
+...kkkk...`,
+trophy:`
+kkk.kkkkk.kkk
+kyk.kyywyk.kyk
+kyk.kyyyyk.kyk
+.kykyyyyyykyk.
+..kkyyyyyykk..
+....kyyyyk....
+.....kYYk.....
+.....kyyk.....
+....kkkkkk....
+...kNNNNNNk...
+...kkkkkkkk...`,
+icecream:`
+..kkk..
+.kpppk.
+kpwpppk
+kpppppk
+kkkkkkk
+.knNnk.
+.kNnNk.
+..knk..
+..kNk..
+...k...`,
+bell:`
+...kk...
+..kyyk..
+.kyyyyk.
+.kywyyk.
+.kywyyk.
+.kyyyyk.
+kyyyyyYk
+kkkkkkkk
+...kYk..
+....k...`,
+carp:`
+k..........
+kkkkkkkkk..
+kkbwebbbbkk
+k.kbbbbbbbbk
+k.kbbBbBbbkk
+k.kkbbbbbk..
+k..kkkkkk...
+k..........
+k..........`,
+umbrella:`
+.....kk.....
+...kkrrkk...
+..krrwrrrk..
+.krrrrrrrrk.
+krrrrrrrrrrk
+kkkrkkkrkkkk
+.....kk.....
+.....kk.....
+..k..kk.....
+..kkkk......`,
+mic:`
+.kkk.
+ksssk
+kswSk
+ksssk
+.kkk.
+.kek.
+.kek.
+.kek.
+.kek.
+.kkk.`,
+butterfly:`
+.kk.....kk.
+kcck.k.kcck
+kcwcckkccck
+kcccckeccck
+.kcccekccck
+..kkkekkkk.
+.kvvkekvvk.
+.kvvk.kvvk.
+..kk...kk..`,
+hearts:`
+.kk...kk.
+krrk.krrk
+krwrkrrrk
+krrrrrrrk
+.krrrrrk.
+..krrrk..
+...krk...
+....k....`,
+notes:`
+....kkkkkk
+....kkkkkk
+....k....k
+....k....k
+....k....k
+..kkk..kkk
+.keeek.keeek
+..kkk...kkk.`,
+snow:`
+....b....
+.b..b..b.
+..b.b.b..
+...bcb...
+bbbbwbbbb
+...bcb...
+..b.b.b..
+.b..b..b.
+....b....`,
+moon:`
+..kkkk..
+.kyyyk..
+kyyyk...
+kyyk....
+kyyk....
+kyyyk...
+.kyyykkk
+..kkkkk.`,
+leaf:`
+......kkk
+....kkggk
+...kgggGk
+..kggGggk
+.kgGgggk.
+kGgggkk..
+kkkkk....
+k........`,
+shine:`
+...y...
+...y...
+..yyy..
+yyywyyy
+..yyy..
+...y...
+...y...`,
+rainbow:`
+...rrrrrr...
+.rroooooorr.
+rooyyyyyyoor
+royggggggyor
+roygbbbbgyor
+roygb..bgyor
+roygb..bgyor`,
+comet:`
+.......kk.
+......kyyk
+.....kywyk
+y...kyyyk.
+.y.kyyyk..
+..yyyyk...
+.yyyy.....
+y.........`,
+shell:`
+...kkk...
+..kpwpk..
+.kpkpkpk.
+kppkpkppk
+kpkpkpkpk
+.kkkkkkk.`,
+fish:`
+...kkkk...k
+.kkooook.kok
+kowkooooookk
+kokooooookok
+.kkooook.kok
+...kkkk...k`,
+tree:`
+....kk....
+...kggk...
+..kgggGk..
+...kggk...
+..kgggGk..
+.kggggGGk.
+..kgggGk..
+.kggggGGk.
+kkkkkkkkkk
+....kNk...
+....kNk...`,
+cloud:`
+...kkk....
+..kwwwkkk.
+.kwwwwwwwk
+kwwwwwwswk
+kwwwwwssk.
+.kkkkkkk..`,
+palm:`
+.kk..kk..
+kggkkggk.
+.kkgggkk.
+.kgkNkgk.
+..k.N.k..
+....N....
+....N....
+...nN....
+...N.....`
+};
+const PXC={};
+function pxSprite(id){
+  if(PXC[id])return PXC[id];
+  const rows=(PX[id]||"").replace(/^\n/,"").split("\n");
+  const w=Math.max(...rows.map(r=>r.length),1),hgt=rows.length;
+  const c=document.createElement("canvas");c.width=w;c.height=hgt;const g=c.getContext("2d");
+  rows.forEach((r,y)=>[...r].forEach((ch,x)=>{if(PXPAL[ch]){g.fillStyle=PXPAL[ch];g.fillRect(x,y,1,1);}}));
+  return PXC[id]={src:c.toDataURL(),w,h:hgt};
+}
+// 작은 아이콘(목록, 버튼용): 한 칸 = px 픽셀
+function pxIcon(id,px=3){const p=pxSprite(id);return `<img class="pxi" src="${p.src}" width="${p.w*px}" height="${p.h*px}" alt="" draggable="false">`;}
+
 /* ---------------- 아이템과 꾸미기 ---------------- */
 const ITEMS={
   atk:{n:"파워 사탕",e:"🍬",d:"포켓몬 한 마리의 공격력이 30 올라가요."},
@@ -738,24 +1135,27 @@ const DECOS={
   moon:["초승달","🌙","aura"],leaf:["나뭇잎","🍃","aura"],shine:["별빛","🌟","aura"],rainbow:["작은 무지개","🌈","aura"],comet:["별똥별","💫","aura"]
 };
 const BGS={
-  heart:{n:"하트 무대",g:"linear-gradient(180deg,#4a7fe0 0%,#c88ae0 28%,#f8b4c8 50%,#ffd890 74%,#ffe8b0 100%)",b:"🎀💗🎀💗🎀💗🎀",c:"linear-gradient(#e8c8ff,#9a6ae0)"},
-  night:{n:"별빛 밤하늘",g:"radial-gradient(circle at 70% 20%,#fff6 0 2%,transparent 3%),radial-gradient(circle at 20% 35%,#fff8 0 1.5%,transparent 2.5%),linear-gradient(#0b1a4a,#2c3a8a 60%,#5a4aa0)",b:"🌙⭐✨⭐🌙⭐✨",c:"linear-gradient(#2a2a6a,#14143a)"},
-  flower:{n:"꽃밭",g:"linear-gradient(#bfe8ff,#e8f8d8 60%,#b8e890)",b:"🌷🌼🌸🌻🌷🌼🌸",c:"linear-gradient(#7acb5a,#3f9a3a)"},
-  sea:{n:"바닷속",g:"linear-gradient(#7fd8f8,#2a8ad0 60%,#1a4a9a)",b:"🐚🐠🌊🐟🐚🐠🌊",c:"linear-gradient(#f0d898,#d8b060)"},
-  snow:{n:"눈 내리는 숲",g:"linear-gradient(#cfe4fa,#f4f8ff 70%)",b:"🌲❄️⛄❄️🌲❄️⛄",c:"linear-gradient(#ffffff,#cfe2f4)"},
-  rainbow:{n:"무지개 언덕",g:"linear-gradient(180deg,#ff9a9a,#ffd27a,#fff59a,#a8f0a0,#9ad0ff,#c8a8ff)",b:"🌈☁️🌈☁️🌈☁️🌈",c:"linear-gradient(#ffffff,#e8f4ff)"},
-  space:{n:"우주 여행",g:"radial-gradient(circle at 30% 30%,#6a4ab0,#120a2a 70%)",b:"🚀⭐🌍⭐🚀⭐🌍",c:"linear-gradient(#2a1a4a,#0a0618)"},
-  sunset:{n:"노을 해변",g:"linear-gradient(#ff8a5a,#ffb86a 40%,#ffd890 58%,#7ac8e8 60%,#4a9ad0)",b:"🌴🐚🦀🌴🐚🦀🌴",c:"linear-gradient(#f8e0a8,#e0b870)"}
+  heart:{n:"하트 무대",g:"linear-gradient(180deg,#4a7fe0 0 12%,#7a86e6 12% 22%,#a888e2 22% 32%,#d090d8 32% 42%,#f4a8c8 42% 54%,#ffc0a8 54% 66%,#ffd890 66% 78%,#ffe8b0 78%)",i:["ribbon","hearts"],c:"linear-gradient(#d8b0ff 0 50%,#9a6ae0 50%)"},
+  night:{n:"별빛 밤하늘",g:"linear-gradient(#0b1a4a 0 30%,#1a2864 30% 55%,#2c3a8a 55% 78%,#4a4a9a 78%)",i:["moon","starsticker","shine"],c:"linear-gradient(#2a2a6a 0 50%,#14143a 50%)",s:1},
+  flower:{n:"꽃밭",g:"linear-gradient(#a8dcff 0 22%,#c8ecff 22% 44%,#e8f8d8 44% 64%,#c8f0a8 64% 82%,#a8e080 82%)",i:["sakura","sunflower","tulip"],c:"linear-gradient(#7acb5a 0 50%,#3f9a3a 50%)"},
+  sea:{n:"바닷속",g:"linear-gradient(#8ae0ff 0 18%,#5ac0f0 18% 38%,#2a8ad0 38% 62%,#1a62b0 62% 82%,#1a4a9a 82%)",i:["fish","shell"],c:"linear-gradient(#f0d898 0 50%,#d8b060 50%)",s:1},
+  snow:{n:"눈 내리는 숲",g:"linear-gradient(#b8d8f8 0 25%,#cfe4fa 25% 50%,#e4f0fc 50% 75%,#f4f8ff 75%)",i:["tree","snow"],c:"linear-gradient(#ffffff 0 50%,#cfe2f4 50%)"},
+  rainbow:{n:"무지개 언덕",g:"linear-gradient(180deg,#ff9a9a 0 16%,#ffd27a 16% 32%,#fff59a 32% 48%,#a8f0a0 48% 64%,#9ad0ff 64% 80%,#c8a8ff 80%)",i:["cloud","rainbow"],c:"linear-gradient(#ffffff 0 50%,#e0eefc 50%)"},
+  space:{n:"우주 여행",g:"linear-gradient(#120a2a 0 25%,#24164a 25% 50%,#3a2470 50% 75%,#5a3aa0 75%)",i:["comet","starsticker","moon"],c:"linear-gradient(#2a1a4a 0 50%,#0a0618 50%)",s:1},
+  sunset:{n:"노을 해변",g:"linear-gradient(#ff7a4a 0 14%,#ff9a5a 14% 28%,#ffb86a 28% 42%,#ffd890 42% 58%,#7ac8e8 58% 76%,#4a9ad0 76%)",i:["palm","shell"],c:"linear-gradient(#f8e0a8 0 50%,#e0b870 50%)"}
 };
+function bgBand(bg){let h="";for(let n=0;n<8;n++){const p=pxSprite(bg.i[n%bg.i.length]);h+=`<img class="bandi" src="${p.src}" alt="" draggable="false">`;}
+  return `<div class="band" style="background:${bg.c}">${h}</div>`;}
+function bgStars(bg){return bg.s?'<div class="pxstars"></div>':"";}
 const repOf=st=>{const m=arr(st&&st.mons);return m.includes(st.rep)?st.rep:(m[0]||null);};
 function owned(st){const s=new Set(arr(st.mons));Object.keys(st.dex||{}).forEach(k=>s.add(+k.slice(1)));return s;}
 function repCard(st){
   const id=repOf(st),d=st.deco||{},bg=BGS[d.bg];
   const pos=d.pos||{},size=d.size||{};
-  const acc=["aura","head","face","hold"].map(s=>{if(!d[s]||!DECOS[d[s]])return "";
-    const st=(pos[s]?`left:${pos[s].x}%;top:${pos[s].y}%;`:"")+(size[s]?`--s:${size[s]};`:"");
-    return `<span class="acc ${s}" data-slot="${s}"${st?` style="${st}"`:""}>${DECOS[d[s]][1]}</span>`;}).join("");
-  return `<div class="rcard" ${bg?`style="background:${bg.g}"`:""}>${bg?`<div class="band" style="background:${bg.c}">${bg.b}</div>`:""}
+  const acc=["aura","head","face","hold"].map(s=>{if(!d[s]||!DECOS[d[s]])return "";const p=pxSprite(d[s]);
+    const st=`--w:${p.w};`+(pos[s]?`left:${pos[s].x}%;top:${pos[s].y}%;`:"")+(size[s]?`--s:${size[s]};`:"");
+    return `<img class="acc ${s}" data-slot="${s}" src="${p.src}" style="${st}" alt="${esc(DECOS[d[s]][0])}" draggable="false">`;}).join("");
+  return `<div class="rcard" ${bg?`style="background:${bg.g}"`:""}>${bg?bgStars(bg)+bgBand(bg):""}
     <div class="stage">${id?spr(id,false):'<span class="egg">🥚</span>'}${acc}</div></div>`;
 }
 function pageHead(title){return `<div class="phead"><button class="btn small" data-act="page" data-p="hub">← 돌아가기</button><h2>${title}</h2></div>`;}
@@ -833,8 +1233,16 @@ async function readLogin(){
   if(!(num>=1&&num<=99)){toast("번호를 입력해 주세요.");return null;}
   if(!name){toast("이름을 입력해 주세요.");return null;}
   if(pw.length<4){toast("비밀번호를 4자리 이상 입력해 주세요.");return null;}
-  const key=userKey(name,num);
-  return {key,name,num,pw:await hashPw(key,pw)};
+  const base=userKey(name,num),hash=await hashPw(base,pw);
+  return {base,name,num,pw:hash,look:"L_"+base+"_"+hash.slice(0,16)};
+}
+/* 계정 찾기: 번호, 이름, 비밀번호가 모두 같아야 같은 계정이에요 */
+async function findAccount(u){
+  const uid=await Store.get("accounts/"+u.look);
+  if(uid){const acc=await Store.get("accounts/"+uid);if(acc&&acc.pw===u.pw)return uid;}
+  const old=await Store.get("accounts/"+u.base); // 예전 방식으로 만든 계정
+  if(old&&old.pw===u.pw&&old.name){await Store.set("accounts/"+u.look,u.base);return u.base;}
+  return null;
 }
 async function afterLogin(u){
   S.user=u;ls().setItem("pkraid-user",JSON.stringify(u));
@@ -1151,7 +1559,7 @@ function StudentRep(){
       if(!drag)setHTML(R.card,repCard(st));
       const sz=d.size||{};
       setHTML(R.sizes,["head","face","hold","aura"].filter(k=>d[k]&&DECOS[d[k]]).map(k=>{const v=sz[k]||1;
-        return `<div class="szrow"><span class="szname">${DECOS[d[k]][1]} ${esc(DECOS[d[k]][0])}</span>
+        return `<div class="szrow"><span class="szname">${pxIcon(d[k],2)} ${esc(DECOS[d[k]][0])}</span>
           <button class="btn small" data-act="decoSize" data-slot="${k}" data-d="-1" ${v<=0.5?"disabled":""} aria-label="${esc(DECOS[d[k]][0])} 작게">작게</button>
           <b>${Math.round(v*100)}%</b>
           <button class="btn small" data-act="decoSize" data-slot="${k}" data-d="1" ${v>=2.5?"disabled":""} aria-label="${esc(DECOS[d[k]][0])} 크게">크게</button></div>`;}).join(""));
@@ -1164,7 +1572,7 @@ function StudentRep(){
         if(!list.length)return "";
         return `<div class="slotrow"><p class="lbl">${label}</p><div class="chips2">
           <button data-act="equip" data-slot="${slot}" data-id="" aria-pressed="${!d[slot]}">없음</button>
-          ${list.map(k=>`<button data-act="equip" data-slot="${slot}" data-id="${k}" aria-pressed="${d[slot]===k}">${slot==="bg"?"🖼️":DECOS[k][1]} ${esc(slot==="bg"?BGS[k].n:DECOS[k][0])}</button>`).join("")}</div></div>`;
+          ${list.map(k=>`<button data-act="equip" data-slot="${slot}" data-id="${k}" aria-pressed="${d[slot]===k}">${slot==="bg"?`<span class="swatch" style="background:${BGS[k].g}"></span>`:pxIcon(k,2)} ${esc(slot==="bg"?BGS[k].n:DECOS[k][0])}</button>`).join("")}</div></div>`;
       }).join(""));
     }
   };
@@ -1279,8 +1687,8 @@ async function openDeco(){
   const pool=isBg?bgs:accs,got=pool[rnd(0,pool.length-1)];
   await Store.update(`rooms/${S.code}/students/${S.sid}`,{"items/deco":n-1,[`decos/${got}`]:true});
   const slot=isBg?"bg":DECOS[got][2];
-  const preview=isBg?`<div class="rcard reveal-bg" style="background:${BGS[got].g}"><div class="band" style="background:${BGS[got].c}">${BGS[got].b}</div></div>`
-    :`<div class="reveal">${DECOS[got][1]}</div>`;
+  const preview=isBg?`<div class="rcard reveal-bg" style="background:${BGS[got].g}">${bgStars(BGS[got])}${bgBand(BGS[got])}</div>`
+    :`<div class="reveal">${pxIcon(got,9)}</div>`;
   Snd.once("win");
   openModal(`<div class="center"><h2>${isBg?"✨ 아주 드문 배경이 나왔어요! ✨":"꾸미기 상자를 열었어요!"}</h2>${preview}
     <p class="big2">${esc(isBg?BGS[got].n:DECOS[got][0])}</p><p class="hint">${SLOTS[slot]}에 다는 꾸미기예요.</p>
@@ -1429,17 +1837,18 @@ function TeacherGrowth(){
 const ACT={
   async login(){
     const u=await readLogin();if(!u)return;
-    const acc=await Store.get("accounts/"+u.key);
-    if(!acc)return toast("그런 계정이 없어요. 처음이면 '계정 만들기'를 눌러 주세요.");
-    if(acc.pw!==u.pw)return toast("비밀번호가 맞지 않아요. 잊어버렸으면 선생님께 말씀드려요.");
-    afterLogin(u);
+    const uid=await findAccount(u);
+    if(!uid)return toast("계정을 찾을 수 없어요. 번호, 이름, 비밀번호를 확인해 주세요. 처음이면 '계정 만들기'를 눌러요.");
+    afterLogin({key:uid,name:u.name,num:u.num,pw:u.pw});
   },
   async signup(){
     const u=await readLogin();if(!u)return;
-    if(await Store.get("accounts/"+u.key))return toast("이미 있는 계정이에요. 로그인해 주세요.");
+    if(await findAccount(u))return toast("번호, 이름, 비밀번호가 똑같은 계정이 이미 있어요. 로그인해 주세요.");
     if(!confirm(`${u.num}번 ${u.name} 계정을 만들까요? 비밀번호를 꼭 기억해 두세요.`))return;
-    await Store.set("accounts/"+u.key,{name:u.name,num:u.num,pw:u.pw,created:Date.now()});
-    afterLogin(u);
+    const uid="u"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    await Store.set("accounts/"+uid,{name:u.name,num:u.num,pw:u.pw,created:Date.now()});
+    await Store.set("accounts/"+u.look,uid);
+    afterLogin({key:uid,name:u.name,num:u.num,pw:u.pw});
   },
   async create(){
     const title=$("#tTitle").value.trim()||"우리 반";let code;
@@ -1491,8 +1900,12 @@ const ACT={
   async resetPw(b){
     const k=b.dataset.sid,st=D().students[k];
     if(!st||!confirm(`${st.num}번 ${st.name}의 비밀번호를 1234로 바꿀까요?`))return;
-    if(!(await Store.get("accounts/"+k)))return toast("계정을 찾을 수 없어요.");
-    await Store.set(`accounts/${k}/pw`,await hashPw(k,"1234"));
+    const acc=await Store.get("accounts/"+k);
+    if(!acc)return toast("계정을 찾을 수 없어요.");
+    const base=userKey(acc.name,acc.num),nh=await hashPw(base,"1234"),nl="L_"+base+"_"+nh.slice(0,16);
+    const other=await Store.get("accounts/"+nl);
+    if(other&&other!==k)return toast(`같은 번호와 이름에 비밀번호가 1234인 계정이 이미 있어서 바꿀 수 없어요.`);
+    await Store.update("accounts",{["L_"+base+"_"+String(acc.pw).slice(0,16)]:null,[nl]:k,[`${k}/pw`]:nh});
     toast(`${st.name}의 비밀번호를 1234로 바꿨어요.`);
   },
   grantSel(){openGrant([...T.sel]);},
