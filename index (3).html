@@ -1,0 +1,1593 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>전설 레이드: 소수 계산 배틀</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --ink:#3a3a48; --paper:#f8f8f0; --rim:#d8a040; --frame:#4a4e68;
+  --hp-g:#48c868; --hp-y:#f0c030; --hp-r:#e84838; --hp-tag:#f0a800;
+  --bg:#1f2238; --dot:#2c3152;
+  --font:"Galmuri11","Galmuri9","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:8px 8px;
+  color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid #6cc4ff;outline-offset:2px}
+h2{margin:0 0 10px;font-size:1.25rem}
+p{margin:.3em 0}
+.win{background:var(--paper);border:3px solid var(--rim);border-radius:6px;padding:16px 18px;
+  box-shadow:0 0 0 4px var(--frame),6px 6px 0 4px rgba(0,0,0,.35)}
+.mt{margin-top:26px}
+.btn{border:3px solid var(--ink);background:#fff;color:var(--ink);padding:10px 16px;border-radius:6px;box-shadow:0 4px 0 var(--ink);font-size:1rem}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn.go{background:#f05a3c;color:#fff;border-color:#7a2414;box-shadow:0 4px 0 #7a2414}
+.btn.blue{background:#3c78d8;color:#fff;border-color:#1c3c78;box-shadow:0 4px 0 #1c3c78}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.small{padding:4px 10px;font-size:.85rem;box-shadow:0 2px 0 var(--ink)}
+.btn.big{display:block;width:100%;margin-top:18px;font-size:1.2rem;padding:14px}
+input,select{font:inherit;border:3px solid var(--ink);border-radius:6px;padding:8px 10px;background:#fff;color:var(--ink);width:100%}
+.lbl{display:block;margin:14px 0 6px;font-size:.95rem}
+.hint{color:#77705e;font-size:.9rem}
+.two{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+details{margin-top:18px}
+summary{cursor:pointer;color:#5a5a70}
+
+#bar{color:#e8e6f4;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;max-width:1180px;margin:0 auto}
+#bar:empty{display:none}
+#bar .code{font-size:1.5rem;letter-spacing:.1em;background:#fff;color:var(--ink);padding:0 10px;border-radius:4px}
+#bar .dim{color:#a8acd0;font-size:.9rem}
+#bar .badge{font-size:.8rem;padding:1px 8px;border:2px solid #8890c0;border-radius:20px;color:#c8ccf0}
+#bar .sp{flex:1}
+main{max-width:1180px;margin:0 auto;padding:12px 14px 48px}
+
+/* 홈 */
+.hero{text-align:center;padding:24px 0 6px}
+.hero .imgs{display:flex;justify-content:center;gap:4px;height:120px}
+.hero .imgs img{width:120px;height:120px}
+.hero h1{font-size:clamp(38px,8vw,72px);margin:0;color:#ffd848;letter-spacing:.04em;
+  text-shadow:4px 4px 0 #b0401c,8px 8px 0 #121424}
+.hero p{color:#c8ccf0}
+.homegrid{display:grid;grid-template-columns:1fr 1fr;gap:28px;max-width:860px;margin:26px auto 0}
+.modenote{max-width:860px;margin:26px auto 0;color:#a8acd0;font-size:.9rem;text-align:center}
+
+/* 배틀 화면 */
+.battle{background:#50505c;border-radius:6px;box-shadow:0 0 0 4px var(--frame),8px 8px 0 4px rgba(0,0,0,.35);overflow:hidden}
+.battle.solo{max-width:680px;margin:0 auto}
+.scene{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;container-type:inline-size;
+  background:linear-gradient(180deg,#fcfbf8 0%,#f4efe2 26%,#ecd9a8 34%,#f6ecd4 42%,#f3e3ba 50%,#dfba6c 58%,#f1e1b8 70%,#e8cc8c 84%,#f4e6c4 100%)}
+.pad{position:absolute;border-radius:50%;
+  background:radial-gradient(ellipse at center,#e8e2d2 0 52%,#d2c9b2 53% 68%,#b8ac8e 69%)}
+.pad.foe{right:3%;top:40%;width:44%;height:13%}
+.pad.me{left:-8%;bottom:-7%;width:58%;height:19%}
+.foe-spr{position:absolute;right:9%;top:6%;width:33%;aspect-ratio:1}
+.me-spr{position:absolute;left:3%;bottom:-3%;width:44%;aspect-ratio:1}
+.foe-spr img,.me-spr img{width:100%;height:100%}
+.spr{image-rendering:pixelated;image-rendering:crisp-edges}
+.spr.flip{transform:scaleX(-1)}
+.ibox{position:absolute;background:#f8f8f0;border:.7cqw solid #4a4a58;color:#38383f;font-size:3.6cqw;line-height:1.25;
+  padding:1.4cqw 2.6cqw 1.6cqw;box-shadow:1cqw 1cqw 0 rgba(0,0,0,.22)}
+.ibox.foe{left:0;top:6%;width:50%;border-left:0;border-radius:0 2.4cqw 2.4cqw 0}
+.ibox.me{right:0;top:55%;width:52%;border-right:0;border-radius:2.4cqw 0 0 2.4cqw}
+.ibox[hidden]{display:none}
+.ibox .row{display:flex;justify-content:space-between;align-items:baseline;gap:2cqw}
+.ibox .nm{font-size:4.6cqw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ibox .lv{font-size:3.2cqw;color:#3a5ab0}
+.ibox .num{text-align:right;font-size:3.3cqw;margin-top:.8cqw}
+.hp{display:flex;align-items:center;gap:1cqw;margin-top:1cqw;background:#505060;padding:.5cqw .9cqw;border-radius:1cqw}
+.hp b{background:var(--hp-tag);color:#5a2a00;font-size:2.6cqw;padding:0 .9cqw;border-radius:.6cqw;line-height:1.5}
+.hp .track{flex:1;height:2cqw;background:#fff;border-radius:.6cqw;overflow:hidden;border:.35cqw solid #fff}
+.hp .fill{height:100%;background:var(--hp-g);transition:width .8s steps(16),background .3s}
+.hp .fill.y{background:var(--hp-y)}
+.hp .fill.r{background:var(--hp-r)}
+.dlg{padding:8px}
+.dlg .in{background:#fff;border:4px solid var(--rim);border-radius:6px;padding:14px 18px;min-height:96px;
+  font-size:clamp(17px,2.3vw,23px);line-height:1.65}
+.dlg .q{margin:0}
+.dlg .sub{font-size:.8em;color:#6a6458;margin-top:.4em}
+.good{color:#1f8a3a}.bad{color:#c0392b}
+
+/* 답 입력 */
+.answer{display:flex;gap:10px;align-items:center;margin-top:14px}
+.ansbox{flex:1;font-size:30px;border:3px solid var(--ink);border-radius:6px;padding:4px 12px;min-height:54px;background:#fffbe8;letter-spacing:.04em}
+.ansbox:empty::before{content:"답을 입력하세요";color:#a8a090;font-size:18px}
+.unit{font-size:24px;min-width:2em}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.keys button{font-size:24px;padding:8px 0;border:3px solid var(--ink);border-radius:6px;background:#fff;box-shadow:0 3px 0 var(--ink)}
+.keys button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.keys .atk{grid-column:1/-1;background:#f05a3c;color:#fff;border-color:#7a2414;box-shadow:0 4px 0 #7a2414}
+
+/* 애니메이션 */
+@keyframes appear{from{transform:translateX(70%);opacity:0}to{transform:none;opacity:1}}
+@keyframes lunge{0%,100%{transform:translate(0,0)}40%{transform:translate(20%,-16%)}}
+@keyframes hurt{0%,100%{transform:translateX(0);opacity:1}15%,45%,75%{opacity:.15}25%{transform:translateX(-7%)}55%{transform:translateX(7%)}}
+@keyframes dodge{0%,100%{transform:translateX(0)}45%{transform:translateX(18%)}}
+@keyframes flee{to{transform:translateX(45%);opacity:.25}}
+@keyframes cheer{50%{transform:translateY(-12%)}}
+.appear{animation:appear .7s steps(7)}
+.lunge{animation:lunge .5s steps(6)}
+.hurt{animation:hurt .8s steps(8) .25s}
+.dodge{animation:dodge .5s steps(5) .2s}
+.fainted img{filter:grayscale(1);opacity:.5}
+
+/* 포켓몬 목록 */
+.mons{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px}
+.mon{position:relative;border:3px solid var(--ink);background:#fff;border-radius:8px;padding:6px;text-align:center}
+.mon img{width:96px;height:96px;display:block;margin:0 auto}
+.mon .n{display:block;font-size:14px}
+button.mon:hover:not(:disabled){background:#eef6ff}
+.mon.used{background:#e8e6e0;color:#888}
+.mon.used img{filter:grayscale(1);opacity:.45}
+.mon.used::after{content:"쉬는 중";position:absolute;top:4px;right:4px;font-size:11px;background:#888;color:#fff;padding:0 5px;border-radius:4px}
+.mon.pick{background:#fff3c4;border-color:#d08a00;box-shadow:0 0 0 3px #f0c030}
+.mon .tag{position:absolute;top:4px;left:4px;font-size:11px;background:#d08a00;color:#fff;padding:0 5px;border-radius:4px}
+.mon .del{position:absolute;top:2px;right:4px;border:0;background:none;font-size:20px;line-height:1;color:#a33}
+.sugg{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.sugg button{width:100%;display:flex;align-items:center;gap:4px;border:2px solid var(--ink);border-radius:6px;background:#fff;padding:2px 8px 2px 2px;text-align:left}
+.sugg img{width:48px;height:48px}
+.sugg .no{color:#8a8270;padding:6px 2px}
+
+/* 선생님 화면 */
+.tgrid{display:grid;grid-template-columns:1.35fr 1fr;gap:28px;align-items:start}
+@media (max-width:900px){.tgrid{grid-template-columns:1fr}}
+.slist{display:flex;flex-direction:column;max-height:62vh;overflow:auto}
+.srow{display:flex;align-items:center;gap:8px;padding:4px 2px;border-bottom:2px dashed #ddd6c2}
+.srow .who{min-width:96px;white-space:nowrap}
+.srow .icons{flex:1;display:flex;flex-wrap:wrap;gap:2px}
+.mini img{width:42px;height:42px;display:block}
+.mini.used img{filter:grayscale(1);opacity:.4}
+.mini.pick{background:#fff3c4;border-radius:6px;box-shadow:0 0 0 2px #f0c030}
+.srow .cnt{font-size:.85rem;color:#77705e}
+.x{border:0;background:none;font-size:22px;color:#a33;padding:0 6px}
+.bossgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px;max-height:260px;overflow:auto;padding:4px;border:2px solid #ddd6c2;border-radius:6px;background:#fff}
+.bossgrid button{border:2px solid #d8d0b8;border-radius:6px;background:#fff;padding:2px;font-size:12px}
+.bossgrid button[aria-pressed="true"]{border-color:#d08a00;background:#fff3c4;box-shadow:0 0 0 2px #f0c030}
+.bossgrid img{width:64px;height:64px;display:block;margin:0 auto}
+.bp{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.bp img{width:96px;height:96px}
+.bp b{font-size:1.4rem}
+.stepper{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.stepper input{width:90px;text-align:center;font-size:1.3rem}
+.tally{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;text-align:center}
+.tally span{border:2px solid #ddd6c2;border-radius:6px;padding:4px 2px;font-size:.85rem;background:#fff}
+.tally b{display:block;font-size:1.6rem;line-height:1.2}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:6px;max-height:48vh;overflow:auto}
+.chip{border:2px solid #bbb;border-radius:6px;padding:4px 8px;font-size:14px;background:#fff}
+.chip small{display:block;font-size:12px;color:#77705e}
+.chip.hit{background:#d6f5d8;border-color:#2a8a3a}
+.chip.miss{background:#f8dcd6;border-color:#b03a2a}
+.chip.pending{background:#fff3c4;border-color:#d08a00}
+.chip.idle{color:#888}
+.hist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
+.hist li{display:flex;align-items:center;gap:8px}
+.hist img{width:40px;height:40px}
+
+.tools{display:flex;align-items:center;gap:8px;margin:4px 0 8px}
+.chk{display:flex;gap:6px;align-items:center;cursor:pointer}
+input[type=checkbox]{width:20px;height:20px;padding:0;accent-color:#3c78d8;flex:none;cursor:pointer}
+.tools .sp{flex:1}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:#c8c0b0;flex:none;vertical-align:middle}
+.dot.on{background:#2cc05a;box-shadow:0 0 0 3px #c8f2d4}
+.srow .btn.small{padding:2px 8px}
+.grant{width:100%;max-width:760px;max-height:90vh;overflow:auto}
+.rooms{display:flex;flex-direction:column;gap:12px}
+.rooms .btn{text-align:left}
+
+
+/* 내 화면 */
+.hubtop{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.hubtop .me{width:190px;flex:none}
+.hubinfo h2{font-size:1.5rem}
+.banners{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-top:26px}
+.banner{position:relative;border:3px solid #1e1e2a;border-radius:10px;padding:14px;text-align:left;box-shadow:0 5px 0 #1e1e2a;display:flex;flex-direction:column;gap:2px;min-height:118px;color:#fff}
+.banner:active{transform:translateY(3px);box-shadow:0 2px 0 #1e1e2a}
+.banner .ic{font-size:36px;line-height:1.1}
+.banner b{font-size:1.08rem}
+.banner small{font-size:.82rem;opacity:.95}
+.b1{background:#e8603c}.b2{background:#c8403a}.b3{background:#f0b030;color:#3a2a00}.b4{background:#3fa55a}.b5{background:#7a5ad0}
+.badge2{position:absolute;top:-10px;right:-8px;background:#ff3b5c;color:#fff;border:2px solid #fff;border-radius:20px;padding:0 9px;font-size:.9rem}
+.badge2[hidden]{display:none}
+.friends{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:16px}
+.fcard{text-align:center}
+.fcard.mine .rcard{box-shadow:0 0 0 4px #f0c030}
+.fname{margin-top:6px;font-size:14px}
+.fmon{font-size:12px;color:#77705e}
+.rcard{position:relative;border:3px solid var(--ink);border-radius:10px;background:linear-gradient(#ffffff,#efe9da);overflow:hidden;aspect-ratio:1/1.1;container-type:inline-size}
+.rcard .band{position:absolute;left:0;right:0;bottom:0;height:20%;display:flex;align-items:center;justify-content:center;font-size:9cqw;letter-spacing:.06em;overflow:hidden;white-space:nowrap;border-top:2px solid rgba(0,0,0,.15)}
+.rcard .stage{position:absolute;inset:4% 4% 16% 4%}
+.rcard .stage img{position:absolute;left:50%;top:50%;width:80%;height:auto;aspect-ratio:1;transform:translate(-50%,-50%)}
+.rcard .egg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:34cqw}
+.rcard .acc{position:absolute;font-size:19cqw;line-height:1;transform:translate(-50%,-50%) scale(var(--s,1));filter:drop-shadow(0 1px 0 rgba(0,0,0,.25))}
+.acc.head{left:50%;top:16%}.acc.face{left:50%;top:47%;font-size:15cqw}.acc.hold{left:80%;top:76%}.acc.aura{left:17%;top:20%}
+.repbig{max-width:320px;margin:0 auto}
+.phead{display:flex;align-items:center;gap:12px;margin:0 0 16px}
+.phead h2{margin:0;color:#fff}
+.mcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.mcard{border:3px solid var(--ink);border-radius:8px;background:#fff;padding:8px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.mcard img{width:96px;height:96px}
+.mcard .pw{color:#c0392b;font-size:14px}
+.mcard.used img{filter:grayscale(1);opacity:.5}
+.mcard.pick{background:#fff3c4;border-color:#d08a00}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.tabs button[aria-pressed="true"]{background:#3c78d8;color:#fff;border-color:#1c3c78}
+.dexgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:6px}
+.dx{border:2px solid #ddd6c2;border-radius:6px;background:#fff;text-align:center;padding:2px 2px 4px;font-size:12px;line-height:1.3}
+.dx img{width:68px;height:68px;display:block;margin:0 auto}
+.dx:not(.own){background:#ece8de;color:#9a9282}
+.dx:not(.own) img{filter:brightness(0);opacity:.22}
+.dx span{display:block;color:#9a9282;font-size:11px}
+.chips2{display:flex;flex-wrap:wrap;gap:6px}
+.chips2 button{border:2px solid var(--ink);border-radius:20px;background:#fff;padding:4px 12px}
+.chips2 button[aria-pressed="true"]{background:#fff3c4;border-color:#d08a00;box-shadow:0 0 0 2px #f0c030}
+.slotrow .lbl{margin:12px 0 6px}
+textarea{font:inherit;border:3px solid var(--ink);border-radius:6px;padding:8px 10px;width:100%;min-height:110px;resize:vertical;background:#fff;color:var(--ink)}
+.gcard{border:2px solid #ddd6c2;border-radius:8px;background:#fff;padding:10px 12px;margin-bottom:10px}
+.gmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.gtext{white-space:pre-wrap;margin:6px 0;word-break:break-word}
+.tag2{font-size:12px;background:#3fa55a;color:#fff;border-radius:10px;padding:0 8px}
+.st{font-size:12px;border-radius:10px;padding:0 8px;border:2px solid}
+.st.pending{border-color:#d08a00;color:#a06a00}.st.approved{border-color:#2a8a3a;color:#1f6a2c}.st.returned{border-color:#b03a2a;color:#a0392b}
+.rw{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0}
+.rwi{display:flex;align-items:center;gap:5px;font-size:14px}
+.rwi b{min-width:1.2em;text-align:center}
+.gbtns{display:flex;gap:8px;flex-wrap:wrap}
+.icards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.icard{border:3px solid var(--ink);border-radius:10px;background:#fff;padding:16px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
+.icard .ie{font-size:52px;line-height:1.1}
+.icard .cnt2{font-size:1.5rem}
+.center{text-align:center}
+.big2{font-size:1.5rem;margin:.3em 0}
+.reveal{font-size:110px;line-height:1.2;animation:pop .6s steps(6)}
+.reveal-bg{width:220px;margin:12px auto;animation:pop .6s steps(6)}
+@keyframes pop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.evobox{position:relative;width:192px;height:192px;margin:10px auto}
+.evobox img{position:absolute;inset:0;width:100%;height:100%}
+.evoing .e1{animation:evoOld 2.6s steps(26) forwards}
+.evoing .e2{opacity:0;animation:evoNew 2.6s steps(26) forwards}
+@keyframes evoOld{0%{filter:none}15%,90%{filter:brightness(0) invert(1)}30%,50%,70%{opacity:1}40%,60%,80%{opacity:.2}100%{opacity:0;filter:brightness(0) invert(1)}}
+@keyframes evoNew{0%,40%{opacity:0;filter:brightness(0) invert(1)}45%,65%,85%{opacity:.9}55%,75%{opacity:0}92%{opacity:1;filter:brightness(0) invert(1)}100%{opacity:1;filter:none}}
+
+
+.critfx{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);font-size:11cqw;color:#ffe03a;white-space:nowrap;z-index:5;
+  text-shadow:.5cqw .5cqw 0 #b0401c,-.3cqw -.3cqw 0 #1a1c30,1cqw 1cqw 0 #1a1c30;animation:critpop 1.3s steps(10) forwards;pointer-events:none}
+@keyframes critpop{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}20%{transform:translate(-50%,-50%) scale(1.25);opacity:1}35%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%)}}
+.crit{color:#e8603c}
+.repbig .acc{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.repbig .acc.dragging{cursor:grabbing;filter:drop-shadow(0 0 6px #fff) drop-shadow(0 0 2px #f0c030);z-index:3}
+
+.sizes{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.szrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.szname{min-width:130px}
+.szrow b{min-width:3.2em;text-align:center}
+/* 결과 */
+.result{text-align:center;padding:28px 18px;max-width:680px;margin:0 auto}
+.result .rspr img{width:min(60vw,288px);height:auto;aspect-ratio:1}
+.result .big{font-size:clamp(28px,5vw,48px);margin:.2em 0}
+.result.caught .rspr{animation:cheer .5s steps(3) 3}
+.result.caught .big{color:#1f8a3a}
+.result.fled .rspr img{animation:flee 1.2s steps(10) forwards}
+.result.fled .big{color:#7a6a58}
+
+#modal{position:fixed;inset:0;background:rgba(10,12,24,.75);display:grid;place-items:center;z-index:50;padding:20px}
+#modal[hidden]{display:none}
+.qrwrap{text-align:center}
+.qrbox{display:inline-block;background:#fff;padding:14px;margin:10px 0}
+.qrcode{font-size:2.6rem;letter-spacing:.12em}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#fff;border:3px solid var(--ink);
+  padding:10px 18px;border-radius:6px;z-index:60;box-shadow:0 4px 0 var(--ink);max-width:90vw}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media (max-width:520px){.homegrid{gap:22px}.keys button{font-size:22px}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<main id="main"></main>
+<div id="modal" hidden></div>
+<script>
+"use strict";
+/* =====================================================================
+   전설 레이드: 소수 계산 배틀
+   ---------------------------------------------------------------------
+   여러 기기(학생 태블릿, 크롬북)에서 함께 하려면 Firebase 설정을 채워 주세요.
+   비워 두면 "테스트 모드"로 돌아가요. 테스트 모드에서는 같은 컴퓨터,
+   같은 브라우저의 여러 탭끼리만 함께할 수 있어요.
+
+   1) https://console.firebase.google.com 에서 프로젝트 만들기
+   2) 빌드 > Realtime Database > 데이터베이스 만들기
+   3) 규칙 탭에 아래를 붙여 넣고 게시
+        { "rules": { "rooms": { ".read": true, ".write": true },
+                   "accounts": { ".read": true, ".write": true } } }
+   4) 프로젝트 설정 > 내 앱 > 웹 앱 추가 > firebaseConfig 값을
+      아래 FIREBASE_CONFIG 자리에 붙여 넣기 (databaseURL이 꼭 있어야 해요)
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  databaseURL: "https://pokemonraid-fce98-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+/* 예시:
+const FIREBASE_CONFIG = {
+  apiKey: "....",
+  authDomain: "....firebaseapp.com",
+  databaseURL: "https://....firebasedatabase.app",
+  projectId: "....",
+  appId: "...."
+};
+*/
+
+/* ---------------- 포켓몬 이름 ---------------- */
+const GEN1="이상해씨 이상해풀 이상해꽃 파이리 리자드 리자몽 꼬부기 어니부기 거북왕 캐터피 단데기 버터플 뿔충이 딱충이 독침붕 구구 피죤 피죤투 꼬렛 레트라 깨비참 깨비드릴조 아보 아보크 피카츄 라이츄 모래두지 고지 니드런♀ 니드리나 니드퀸 니드런♂ 니드리노 니드킹 삐삐 픽시 식스테일 나인테일 푸린 푸크린 주뱃 골뱃 뚜벅쵸 냄새꼬 라플레시아 파라스 파라섹트 콘팡 도나리 디그다 닥트리오 나옹 페르시온 고라파덕 골덕 망키 성원숭 가디 윈디 발챙이 슈륙챙이 강챙이 캐이시 윤겔라 후딘 알통몬 근육몬 괴력몬 모다피 우츠동 우츠보트 왕눈해 독파리 꼬마돌 데구리 딱구리 포니타 날쌩마 야돈 야도란 코일 레어코일 파오리 두두 두트리오 쥬쥬 쥬레곤 질퍽이 질뻐기 셀러 파르셀 고오스 고우스트 팬텀 롱스톤 슬리프 슬리퍼 크랩 킹크랩 찌리리공 붐볼 아라리 나시 탕구리 텅구리 시라소몬 홍수몬 내루미 또가스 또도가스 뿔카노 코뿌리 럭키 덩쿠리 캥카 쏘드라 시드라 콘치 왕콘치 별가사리 아쿠스타 마임맨 스라크 루주라 에레브 마그마 쁘사이저 켄타로스 잉어킹 갸라도스 라프라스 메타몽 이브이 샤미드 쥬피썬더 부스터 폴리곤 암나이트 암스타 투구 투구푸스 프테라 잠만보 프리져 썬더 파이어 미뇽 신뇽 망나뇽 뮤츠 뮤";
+const GEN2="치코리타 베이리프 메가니움 브케인 마그케인 블레이범 리아코 엘리게이 장크로다일 꼬리선 다꼬리 부우부 야부엉 레디바 레디안 페이검 아리아도스 크로뱃 초라기 랜턴 피츄 삐 푸푸린 토게피 토게틱 네이티 네이티오 메리프 보송송 전룡 아르코 마릴 마릴리 꼬지모 왕구리 통통코 두코 솜솜코 에이팜 해너츠 해루미 왕자리 우파 누오 에브이 블래키 니로우 야도킹 무우마 안농 마자용 키링키 피콘 쏘콘 노고치 글라이거 강철톤 블루 그랑블루 침바루 핫삼 단단지 헤라크로스 포푸니 깜지곰 링곰 마그마그 마그카르고 꾸꾸리 메꾸리 코산호 총어 대포무노 딜리버드 만타인 무장조 델빌 헬가 킹드라 코코리 코리갑 폴리곤2 노라키 루브도 배루키 카포에라 뽀뽀라 에레키드 마그비 밀탱크 해피너스 라이코 앤테이 스이쿤 애버라스 데기라스 마기라스 루기아 칠색조 세레비";
+const GEN3="나무지기 나무돌이 나무킹 아차모 영치코 번치코 물짱이 늪짱이 대짱이 포챠나 그라에나 지그제구리 직구리 개무소 실쿤 뷰티플라이 카스쿤 독케일 연꽃몬 로토스 로파파 도토링 잎새코 다탱구 테일로 스왈로 갈모매 패리퍼 랄토스 킬리아 가디안 비구술 비나방 버섯꼬 버섯모 게을로 발바로 게을킹 토중몬 아이스크 껍질몬 소곤룡 노공룡 폭음룡 마크탕 하리뭉 루리리 코코파스 에나비 델케티 깜까미 입치트 가보리 갱도라 보스로라 요가랑 요가램 썬더라이 썬더볼트 플러시 마이농 볼비트 네오비트 로젤리아 꼴깍몬 꿀꺽몬 샤프니아 샤크니아 고래왕자 고래왕 둔타 폭타 코터스 피그점프 피그킹 얼루기 톱치 비브라바 플라이곤 선인왕 밤선인 파비코 파비코리 쟝고 세비퍼 루나톤 솔록 미꾸리 메깅 가재군 가재장군 오뚝군 점토도리 릴링 릴리요 아노딥스 아말도 빈티나 밀로틱 캐스퐁 켈리몬 어둠대신 다크펫 해골몽 미라몽 트로피우스 치렁 앱솔 마자 눈꼬마 얼음귀신 대굴레오 씨레오 씨카이저 진주몽 헌테일 분홍장이 시라칸 사랑동이 아공이 쉘곤 보만다 메탕 메탕구 메타그로스 레지락 레지아이스 레지스틸 라티아스 라티오스 가이오가 그란돈 레쿠쟈 지라치 테오키스";
+const GEN4="모부기 수풀부기 토대부기 불꽃숭이 파이숭이 초염몽 팽도리 팽태자 엠페르트 찌르꼬 찌르버드 찌르호크 비버니 비버통 귀뚤뚜기 귀뚤톡크 꼬링크 럭시오 렌트라 꼬몽울 로즈레이드 두개도스 램펄드 방패톱스 바리톱스 도롱충이 도롱마담 나메일 세꿀버리 비퀸 파치리스 브이젤 플로젤 체리버 체리꼬 깝질무 트리토돈 겟핸보숭 흔들풍손 둥실라이드 이어롤 이어롭 무우마직 돈크로우 나옹마 몬냥이 랑딸랑 스컹뿡 스컹탱크 동미러 동탁군 꼬지지 흉내내 핑복 페라페 화강돌 딥상어동 한바이트 한카리아스 먹고자 리오르 루카리오 히포포타스 하마돈 스콜피 드래피온 삐딱구리 독개굴 무스틈니 형광어 네오라이트 타만타 눈쓰개 눈설왕 포푸니라 자포코일 내룸벨트 거대코뿌리 덩쿠림보 에레키블 마그마번 토게키스 메가자리 리피아 글레이시아 글라이온 맘모꾸리 폴리곤Z 엘레이드 대코파스 야느와르몽 눈여아 로토무 유크시 엠라이트 아그놈 디아루가 펄기아 히드런 레지기가스 기라티나 크레세리아 피오네 마나피 다크라이 쉐이미 아르세우스";
+const LEGENDS=[[144,"프리져"],[145,"썬더"],[146,"파이어"],[150,"뮤츠"],[151,"뮤"],[243,"라이코"],[244,"앤테이"],[245,"스이쿤"],[249,"루기아"],[250,"칠색조"],[377,"레지락"],[378,"레지아이스"],[379,"레지스틸"],[380,"라티아스"],[381,"라티오스"],[382,"가이오가"],[383,"그란돈"],[384,"레쿠쟈"],[385,"지라치"],[386,"테오키스"],[480,"유크시"],[481,"엠라이트"],[482,"아그놈"],[483,"디아루가"],[484,"펄기아"],[485,"히드런"],[486,"레지기가스"],[487,"기라티나"],[488,"크레세리아"],[491,"다크라이"],[493,"아르세우스"],[638,"코바르온"],[639,"테라키온"],[640,"비리디온"],[641,"토네로스"],[642,"볼트로스"],[643,"레시라무"],[644,"제크로무"],[645,"랜드로스"],[646,"큐레무"],[716,"제르네아스"],[717,"이벨타르"],[718,"지가르데"],[791,"솔가레오"],[792,"루나아라"],[800,"네크로즈마"],[888,"자시안"],[889,"자마젠타"],[890,"무한다이노"]];
+const NAMES={};
+[GEN1,GEN2,GEN3,GEN4].join(" ").split(" ").forEach((n,i)=>{NAMES[i+1]=n;});
+LEGENDS.forEach(([id,n])=>{if(!NAMES[id])NAMES[id]=n;});
+// 5세대 이후 이름은 인터넷에서 불러와 더해요(실패해도 1~4세대는 그대로 쓸 수 있어요).
+function loadMoreNames(){
+  fetch("https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species_names.csv")
+    .then(r=>r.ok?r.text():"").then(t=>{
+      t.split("\n").forEach(line=>{const p=line.split(",");
+        if(p[1]==="3"){const id=+p[0],n=(p[2]||"").trim(); if(id>0&&n&&!NAMES[id])NAMES[id]=n;}});
+    }).catch(()=>{});
+}
+const nameOf=id=>NAMES[id]||("#"+id);
+const SPRITE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
+function spr(id,back){
+  return `<img class="spr" src="${SPRITE}${back?"back/":""}${id}.png" data-id="${id}" data-back="${back?1:0}" alt="${esc(nameOf(id))}" onerror="sprFail(this)">`;
+}
+window.sprFail=img=>{
+  if(img.dataset.back==="1"){img.dataset.back="2";img.classList.add("flip");img.src=SPRITE+img.dataset.id+".png";}
+  else{img.onerror=null;img.removeAttribute("src");}
+};
+
+/* ---------------- 도구 ---------------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const arr=x=>Array.isArray(x)?x.filter(v=>v!=null):(x&&typeof x==="object"?Object.values(x):[]);
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function h(html){const t=document.createElement("template");t.innerHTML=html.trim();return t.content.firstElementChild;}
+function refs(root){const o={};root.querySelectorAll("[data-r]").forEach(e=>{o[e.dataset.r]=e;});return o;}
+function setHTML(el,html){if(el&&el._h!==html){el._h=html;el.innerHTML=html;}}
+function critFx(scene){if(!scene)return;const f=h('<div class="critfx">크리티컬!</div>');scene.append(f);setTimeout(()=>f.remove(),1300);}
+function restart(el,cls){el.classList.remove("lunge","hurt","dodge","appear");void el.offsetWidth;el.classList.add(cls);}
+function josa(w,a,b){
+  const c=w.charCodeAt(w.length-1);
+  if(c>=0xAC00&&c<=0xD7A3)return w+(((c-0xAC00)%28)?a:b);
+  if(/[0-9]$/.test(w))return w+("013678".includes(w.slice(-1))?a:b);
+  return w+b;
+}
+function toast(msg){const t=h(`<div class="toast" role="status">${esc(msg)}</div>`);document.body.append(t);setTimeout(()=>t.remove(),2600);}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>rej(new Error(src));document.head.append(s);});}
+
+/* ---------------- 저장소 (Firebase 또는 테스트 모드) ---------------- */
+const LKEY="pkraid-local-db";
+function getAt(o,path){for(const k of path.split("/").filter(Boolean)){if(o==null)return null;o=o[k];}return o??null;}
+function setAt(o,path,val){
+  const ks=path.split("/").filter(Boolean);
+  for(let i=0;i<ks.length-1;i++){if(typeof o[ks[i]]!=="object"||o[ks[i]]===null)o[ks[i]]={};o=o[ks[i]];}
+  const last=ks[ks.length-1];
+  if(val===null||val===undefined)delete o[last];else o[last]=JSON.parse(JSON.stringify(val));
+}
+const clone=x=>x==null?null:JSON.parse(JSON.stringify(x));
+const Store={
+  mode:"local",tree:{},subs:new Set(),
+  async init(){
+    if(FIREBASE_CONFIG&&FIREBASE_CONFIG.databaseURL){
+      try{
+        await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
+        await loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js");
+        firebase.initializeApp(FIREBASE_CONFIG);
+        this.db=firebase.database();this.mode="online";return;
+      }catch(e){toast("온라인 연결에 실패해서 테스트 모드로 시작해요.");}
+    }
+    this.tree=this.load();
+    addEventListener("storage",e=>{if(e.key===LKEY){this.tree=this.load();this.fire();}});
+  },
+  load(){try{return JSON.parse(localStorage.getItem(LKEY))||{};}catch(e){return{};}},
+  save(){localStorage.setItem(LKEY,JSON.stringify(this.tree));this.fire();},
+  fire(){queueMicrotask(()=>{for(const s of this.subs)s.cb(clone(getAt(this.tree,s.path)));});},
+  on(path,cb){
+    if(this.mode==="online"){const ref=this.db.ref(path),fn=s=>cb(s.val());ref.on("value",fn);return()=>ref.off("value",fn);}
+    const s={path,cb};this.subs.add(s);queueMicrotask(()=>cb(clone(getAt(this.tree,path))));return()=>this.subs.delete(s);
+  },
+  async get(path){
+    if(this.mode==="online")return(await this.db.ref(path).get()).val();
+    return clone(getAt(this.tree,path));
+  },
+  async set(path,val){
+    if(this.mode==="online")return this.db.ref(path).set(val);
+    setAt(this.tree,path,val);this.save();
+  },
+  async update(path,obj){
+    if(this.mode==="online")return this.db.ref(path).update(obj);
+    for(const[k,v]of Object.entries(obj))setAt(this.tree,path+"/"+k,v);this.save();
+  }
+};
+
+/* ---------------- 문제 만들기 ---------------- */
+// 수는 모두 1/100 단위 정수로 계산해요(소수 오차 방지).
+const TPL=[
+  ["+","m",(a,b)=>`빨간 리본은 ${a} m, 파란 리본은 ${b} m입니다. 리본은 모두 몇 m일까요?`],
+  ["+","L",(a,b)=>`어제 우유를 ${a} L 마셨고, 오늘은 ${b} L 마셨습니다. 이틀 동안 마신 우유는 모두 몇 L일까요?`],
+  ["+","kg",(a,b)=>`사과 한 상자는 ${a} kg이고, 배 한 상자는 ${b} kg입니다. 두 상자의 무게는 모두 몇 kg일까요?`],
+  ["+","km",(a,b)=>`집에서 학교까지는 ${a} km이고, 학교에서 도서관까지는 ${b} km입니다. 집에서 학교를 지나 도서관까지는 몇 km일까요?`],
+  ["+","L",(a,b)=>`물통에 물이 ${a} L 들어 있습니다. 물을 ${b} L 더 부으면 물통의 물은 몇 L가 될까요?`],
+  ["+","kg",(a,b)=>`트레이너가 상처약 상자 ${a} kg과 몬스터볼 상자 ${b} kg을 들고 있습니다. 모두 몇 kg일까요?`],
+  ["+","kg",(a,b)=>`빵을 만들려고 밀가루 ${a} kg과 설탕 ${b} kg을 섞었습니다. 섞은 가루는 모두 몇 kg일까요?`],
+  ["+","km",(a,b)=>`민서는 오전에 ${a} km, 오후에 ${b} km를 달렸습니다. 하루 동안 달린 거리는 몇 km일까요?`],
+  ["+","L",(a,b)=>`주스가 한 병에는 ${a} L, 다른 병에는 ${b} L 들어 있습니다. 주스는 모두 몇 L일까요?`],
+  ["+","m",(a,b)=>`철사를 ${a} m 사용하고 나니 ${b} m가 남았습니다. 처음 철사의 길이는 몇 m였을까요?`],
+  ["+","kg",(a,b)=>`강아지의 무게는 ${a} kg이고, 고양이는 강아지보다 ${b} kg 더 무겁습니다. 고양이의 무게는 몇 kg일까요?`],
+  ["+","m",(a,b)=>`나무의 키가 작년에는 ${a} m였는데 올해 ${b} m 더 자랐습니다. 올해 나무의 키는 몇 m일까요?`],
+  ["-","m",(a,b)=>`리본 ${a} m 중에서 ${b} m를 선물 포장에 썼습니다. 남은 리본은 몇 m일까요?`],
+  ["-","L",(a,b)=>`물 ${a} L 중에서 ${b} L를 마셨습니다. 남은 물은 몇 L일까요?`],
+  ["-","kg",(a,b)=>`쌀 ${a} kg 중에서 ${b} kg으로 밥을 지었습니다. 남은 쌀은 몇 kg일까요?`],
+  ["-","km",(a,b)=>`등산로의 길이는 ${a} km입니다. 지금까지 ${b} km를 걸었다면 남은 거리는 몇 km일까요?`],
+  ["-","kg",(a,b)=>`형의 가방은 ${a} kg이고, 동생의 가방은 ${b} kg입니다. 형의 가방은 동생의 가방보다 몇 kg 더 무거울까요?`],
+  ["-","m",(a,b)=>`노란 끈의 길이는 ${a} m이고, 초록 끈의 길이는 ${b} m입니다. 노란 끈은 초록 끈보다 몇 m 더 길까요?`],
+  ["-","L",(a,b)=>`수조에 물이 ${a} L 들어 있었습니다. 물을 ${b} L 퍼냈다면 남은 물은 몇 L일까요?`],
+  ["-","kg",(a,b)=>`감자 ${a} kg을 사서 ${b} kg으로 카레를 만들었습니다. 남은 감자는 몇 kg일까요?`],
+  ["-","m",(a,b)=>`${a} m짜리 색 테이프에서 ${b} m를 잘라 냈습니다. 남은 색 테이프는 몇 m일까요?`],
+  ["-","L",(a,b)=>`음료수 ${a} L 중에서 ${b} L를 친구들에게 나누어 주었습니다. 남은 음료수는 몇 L일까요?`],
+  ["-","km",(a,b)=>`자전거로 ${a} km를 가야 합니다. ${b} km를 왔다면 앞으로 몇 km를 더 가야 할까요?`],
+  ["-","kg",(a,b)=>`트레이너의 가방은 ${a} kg입니다. 가방에서 짐을 ${b} kg만큼 꺼내면 가방은 몇 kg이 될까요?`],
+  ["-","m",(a,b)=>`높이가 ${a} m인 나무와 ${b} m인 나무가 있습니다. 두 나무의 높이 차이는 몇 m일까요?`]
+];
+function makeNum(){ // 0.1 ~ 9.99, 자연수는 나오지 않게
+  if(Math.random()<0.6){let v;do{v=rnd(10,999);}while(v%10===0);return v;}
+  let v;do{v=rnd(1,99)*10;}while(v%100===0);return v;
+}
+function fmt(x){return (x/100).toFixed(2).replace(/\.?0+$/,"");}
+function makeProblem(){
+  const [op,unit,f]=TPL[rnd(0,TPL.length-1)];
+  let a=makeNum(),b=makeNum();
+  if(op==="-"){while(a===b)b=makeNum();if(a<b)[a,b]=[b,a];}
+  return {text:f(fmt(a),fmt(b)),ans:op==="+"?a+b:a-b,unit};
+}
+
+
+/* ---------------- 소리 ----------------
+   배경음악과 효과음은 이 게임을 위해 새로 만든 8비트풍 곡이에요(파일 없이 브라우저에서 바로 만들어요).
+   울음소리는 PokeAPI에서 불러오고, 못 불러오면 비슷한 효과음으로 대신해요. */
+const rep=(s,n)=>Array(n).fill(s).join(" ");
+const SONGS={
+  title:{bpm:118,loop:true,bus:"bgm",
+    ch:[{w:"square",v:.16,n:`E5:2 G5:2 C6:4 B5:2 G5:2 E5:4  A5:2 C6:2 E6:4 D6:2 C6:2 A5:4
+        F5:2 A5:2 C6:4 D6:2 C6:2 A5:2 F5:2  G5:4 B5:4 D6:6 -:2
+        E6:2 D6:2 C6:2 G5:2 E5:4 G5:4  A5:2 B5:2 C6:2 E6:2 D6:4 C6:4
+        F5:2 G5:2 A5:2 C6:2 D6:2 C6:2 B5:2 A5:2  G5:4 D5:2 G5:2 B5:4 -:4`},
+        {w:"triangle",v:.42,n:[rep("C3:2 G3:2",4),rep("A2:2 E3:2",4),rep("F2:2 C3:2",4),rep("G2:2 D3:2",4)].join(" ").repeat(1)+" "+[rep("C3:2 G3:2",4),rep("A2:2 E3:2",4),rep("F2:2 C3:2",4),rep("G2:2 D3:2",4)].join(" ")}],
+    dr:"k---s---k-k-s---".repeat(8)},
+  battle:{bpm:156,loop:true,bus:"bgm",
+    ch:[{w:"square",v:.15,n:`A4:2 C5:2 E5:2 A5:4 G5:2 E5:2 C5:2  F5:2 E5:2 C5:2 A4:2 C5:4 F5:4
+        G5:2 F5:2 D5:2 B4:2 D5:2 G5:2 B5:4  G#5:4 E5:2 B4:2 G#4:4 B4:4
+        A5:2 B5:2 C6:4 B5:2 A5:2 E5:4  F5:2 G5:2 A5:4 G5:2 F5:2 C5:4
+        D5:2 G5:2 B5:2 D6:2 C6:2 B5:2 G5:4  E5:2 G#5:2 B5:2 E6:2 D6:2 B5:2 G#5:4`},
+        {w:"triangle",v:.45,n:[rep("A2:2 A3:2",4),rep("F2:2 F3:2",4),rep("G2:2 G3:2",4),rep("E2:2 E3:2",4)].join(" ")+" "+[rep("A2:2 A3:2",4),rep("F2:2 F3:2",4),rep("G2:2 G3:2",4),rep("E2:2 E3:2",4)].join(" ")}],
+    dr:"k-h-s-hkk-h-s-hh".repeat(8)},
+  win:{bpm:150,bus:"sfx",
+    ch:[{w:"square",v:.2,n:"C5:2 E5:2 G5:2 C6:6 -:2 G5:2 A5:2 B5:2 C6:12"},
+        {w:"triangle",v:.45,n:"C3:6 G3:6 E3:4 G3:6 C3:10"}],dr:"k---k---k-k-s-------s"},
+  lose:{bpm:96,bus:"sfx",
+    ch:[{w:"square",v:.16,n:"E5:3 D#5:3 D5:3 C#5:9"},{w:"triangle",v:.4,n:"A2:9 A2:9"}]}
+};
+function freq(n){const m=n.match(/^([A-G])([#b]?)(\d)$/);const s={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]]+(m[2]==="#"?1:m[2]==="b"?-1:0);
+  return 440*Math.pow(2,((+m[3]+1)*12+s-69)/12);}
+function compile(song){
+  if(song.c)return song.c;const steps=new Map();let len=0;
+  const put=(t,e)=>{if(!steps.has(t))steps.set(t,[]);steps.get(t).push(e);};
+  song.ch.forEach((c,ci)=>{let t=0;c.n.trim().split(/\s+/).forEach(tok=>{const[nm,d]=tok.split(":");if(nm!=="-")put(t,{ci,f:freq(nm),d:+d});t+=+d;});len=Math.max(len,t);});
+  if(song.dr){[...song.dr].forEach((ch,i)=>{if(ch!=="-")put(i,{dr:ch});});len=Math.max(len,song.dr.length);}
+  return song.c={steps,len};
+}
+const Snd={
+  ctx:null,mode:localStorage.getItem("pkraid-snd")||"all",want:null,cur:null,gen:0,
+  init(){
+    if(this.ctx)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    const c=this.ctx=new AC();
+    this.out=c.createGain();this.out.gain.value=.7;this.out.connect(c.destination);
+    this.bus={bgm:c.createGain(),sfx:c.createGain()};
+    this.bus.bgm.gain.value=.55;this.bus.sfx.gain.value=.9;
+    this.bus.bgm.connect(this.out);this.bus.sfx.connect(this.out);
+    const b=this.noiseBuf=c.createBuffer(1,c.sampleRate,c.sampleRate);const d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  },
+  ready(){return this.ctx&&this.ctx.state==="running";},
+  unlock(){
+    this.init();if(!this.ctx)return;
+    const go=()=>{if(!this.cur&&this.want)this.bgm(this.want);};
+    if(this.ctx.state==="running")go();else this.ctx.resume().then(go);
+  },
+  label(){return {all:"🔊 소리 켜짐",sfx:"🔉 효과음만",off:"🔇 소리 꺼짐"}[this.mode];},
+  setMode(m){this.mode=m;localStorage.setItem("pkraid-snd",m);if(m!=="all")this.stop();else{this.cur=null;this.bgm(this.want);}},
+  cycle(){this.setMode({all:"sfx",sfx:"off",off:"all"}[this.mode]);},
+  stop(){this.gen++;this.cur=null;},
+  bgm(name){
+    this.want=name;
+    if(this.mode!=="all"||!name){this.stop();return;}
+    if(!this.ready()||this.cur===name)return;
+    this.stop();this.cur=name;
+    const s=SONGS[name],c=compile(s),sd=60/s.bpm/4,gen=this.gen;let i=0,t=this.ctx.currentTime+.08;
+    const tick=()=>{
+      if(gen!==this.gen)return;
+      while(t<this.ctx.currentTime+.18){this.step(s,c,i,t,sd);i=(i+1)%c.len;t+=sd;}
+      setTimeout(tick,30);
+    };tick();
+  },
+  once(name){
+    if(this.mode==="off"||!this.ready())return;
+    const s=SONGS[name],c=compile(s),sd=60/s.bpm/4,t0=this.ctx.currentTime+.05;
+    for(let i=0;i<c.len;i++)this.step(s,c,i,t0+i*sd,sd);
+  },
+  step(s,c,i,t,sd){const ev=c.steps.get(i);if(!ev)return;const bus=this.bus[s.bus];
+    ev.forEach(e=>e.dr?this.drum(e.dr,t,bus):this.tone(s.ch[e.ci].w,e.f,t,e.d*sd,s.ch[e.ci].v,bus));},
+  tone(w,f,t,d,v,bus,f2){
+    const c=this.ctx,o=c.createOscillator(),g=c.createGain();o.type=w;o.frequency.setValueAtTime(f,t);
+    if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.008);g.gain.setTargetAtTime(v*.55,t+.03,.08);g.gain.setTargetAtTime(0,t+d*.85,.025);
+    o.connect(g);g.connect(bus);o.start(t);o.stop(t+d+.15);
+  },
+  noise(t,d,v,type,fq,bus,fq2){
+    const c=this.ctx,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=this.noiseBuf;
+    f.type=type;f.frequency.setValueAtTime(fq,t);if(fq2)f.frequency.exponentialRampToValueAtTime(fq2,t+d);
+    g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
+    s.connect(f);f.connect(g);g.connect(bus);s.start(t);s.stop(t+d+.05);
+  },
+  drum(k,t,bus){
+    if(k==="h")this.noise(t,.04,.12,"highpass",7000,bus);
+    else if(k==="s")this.noise(t,.12,.28,"bandpass",1800,bus);
+    else{const c=this.ctx,o=c.createOscillator(),g=c.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(40,t+.12);
+      g.gain.setValueAtTime(.55,t);g.gain.exponentialRampToValueAtTime(.001,t+.14);o.connect(g);g.connect(bus);o.start(t);o.stop(t+.16);}
+  },
+  sfx(name){
+    if(this.mode==="off"||!this.ready())return;const t=this.ctx.currentTime+.01,b=this.bus.sfx;
+    if(name==="blip")this.tone("square",880,t,.05,.12,b);
+    else if(name==="key")this.tone("square",660,t,.035,.1,b);
+    else if(name==="hit"){this.noise(t,.25,.5,"lowpass",3000,b,300);this.tone("square",620,t,.22,.2,b,90);}
+    else if(name==="miss"){this.noise(t,.35,.25,"bandpass",3200,b,500);}
+    else if(name==="roar"){this.tone("sawtooth",240,t,.7,.18,b,80);this.tone("square",180,t+.05,.6,.08,b,70);this.noise(t,.5,.15,"bandpass",900,b,300);}
+  },
+  cry(id){
+    if(this.mode==="off")return;
+    const a=document.createElement("audio");
+    if(!a.canPlayType('audio/ogg; codecs="vorbis"')){this.sfx("roar");return;}
+    let done=false;const fb=()=>{if(!done){done=true;this.sfx("roar");}};
+    a.src=`https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${id}.ogg`;a.volume=.45;
+    a.onerror=fb;a.play().then(()=>{done=true;}).catch(fb);
+  }
+};
+addEventListener("pointerdown",()=>Snd.unlock(),{capture:true});
+addEventListener("keydown",()=>Snd.unlock(),{capture:true});
+function sndBtn(){return `<button class="btn small" data-act="snd" aria-label="소리 설정 바꾸기">${Snd.label()}</button>`;}
+function homeBar(){setHTML(bar,`<span class="sp"></span>${sndBtn()}`);}
+
+/* ---------------- 상태와 화면 전환 ---------------- */
+const S={role:null,code:null,sid:null,room:null,unsub:null,user:null,creating:null,pending:null,page:"hub",ack:null,gcat:null,gdraft:"",dexGen:0};
+const T={boss:null,hp:null,seen:null,queue:[],playing:false,sel:new Set(),grant:null,page:null,rw:{}};
+const main=$("#main"),bar=$("#bar"),modal=$("#modal");
+let cur={key:null,v:null};
+function show(key,make){
+  if(cur.key!==key){cur.v&&cur.v.destroy&&cur.v.destroy();main.innerHTML="";cur={key,v:make()};cur.v.mount(main);}
+  cur.v.update&&cur.v.update();
+}
+function D(){
+  const room=S.room,meta=room.meta,students=room.students||{},raid=meta.raidNo||0;
+  const atts=(room.attempts&&room.attempts["r"+raid])||{};
+  const hits=Object.values(atts).reduce((n,a)=>n+(a&&a.status==="hit"?(a.crit?2:1):0),0);
+  return {room,meta,students,raid,atts,hits,hp:Math.max(0,(meta.maxHp||1)-hits),parts:meta.participants||{}};
+}
+const sorted=students=>Object.entries(students).filter(([,v])=>v)
+  .sort((a,b)=>(a[1].num||0)-(b[1].num||0)||String(a[1].name).localeCompare(String(b[1].name)));
+const allUsed=st=>{const m=arr(st.mons),u=arr(st.used);return m.length>0&&m.every(x=>u.includes(x));};
+function available(st){const m=arr(st.mons),u=arr(st.used);return allUsed(st)?m:m.filter(x=>!u.includes(x));}
+const ls=()=>Store.mode==="online"?localStorage:sessionStorage;
+const isOnline=k=>!!(S.room&&S.room.online&&S.room.online[k]);
+const userKey=(name,num)=>name.replace(/[\s.#$\[\]\/]/g,"")+"-"+num;
+async function hashPw(key,pw){
+  const data=new TextEncoder().encode("pkraid:"+key+":"+pw);
+  if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest("SHA-256",data);return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");}
+  let x=5381;for(const c of data)x=((x<<5)+x+c)>>>0;return "f"+x.toString(16);
+}
+
+/* 접속 상태: 방 화면에 들어와 있는 학생만 "접속 중"으로 표시돼요 */
+let P=null;
+function startPresence(code,key){
+  stopPresence();const path=`rooms/${code}/online/${key}`;
+  if(Store.mode==="online"){
+    const ref=Store.db.ref(path),con=Store.db.ref(".info/connected");
+    const fn=s=>{if(s.val()===true)ref.onDisconnect().remove().then(()=>ref.set(Date.now()));};
+    con.on("value",fn);
+    P={stop:()=>{con.off("value",fn);ref.onDisconnect().cancel();ref.remove();}};
+  }else{
+    Store.set(path,Date.now());
+    const bye=()=>{setAt(Store.tree,path,null);localStorage.setItem(LKEY,JSON.stringify(Store.tree));};
+    addEventListener("pagehide",bye);
+    P={stop:()=>{removeEventListener("pagehide",bye);Store.set(path,null);}};
+  }
+}
+function stopPresence(){if(P){P.stop();P=null;}}
+
+function enterRoom(role,code){
+  S.role=role;S.code=code;S.sid=role==="student"?S.user.key:null;
+  if(role==="teacher")sessionStorage.setItem("pkraid-teacher",code);else ls().setItem("pkraid-lastroom",code);
+  S.unsub&&S.unsub();
+  S.unsub=Store.on("rooms/"+code,room=>{S.room=room;render();});
+  if(role==="student")startPresence(code,S.user.key);
+  return true;
+}
+function exitRoom(){
+  S.unsub&&S.unsub();S.unsub=null;stopPresence();
+  if(S.role==="teacher")sessionStorage.removeItem("pkraid-teacher");else if(S.role)ls().removeItem("pkraid-lastroom");
+  Object.assign(S,{role:null,code:null,sid:null,room:null,creating:null,page:"hub",ack:null});
+  Object.assign(T,{boss:null,hp:null,seen:null,queue:[],playing:false,sel:new Set(),grant:null,page:null,rw:{}});
+  modal.hidden=true;modal.innerHTML="";
+  if(S.user)show("lobby",StudentLobby);else show("home",HomeView);
+}
+function logout(){
+  if(S.role)exitRoom();
+  S.user=null;ls().removeItem("pkraid-user");ls().removeItem("pkraid-lastroom");
+  show("home",HomeView);
+}
+function render(){
+  if(!S.role)return;
+  if(!S.room||!S.room.meta){toast("방을 찾을 수 없어요.");exitRoom();return;}
+  renderBar();
+  const {meta,raid}=D();
+  Snd.bgm(meta.stage==="raid"?"battle":meta.stage==="result"?null:"title");
+  if(S.role==="teacher"){
+    if(T.page==="growth")show("T-growth",TeacherGrowth);
+    else if(meta.stage==="raid")show("T-raid-"+raid,TeacherRaid);
+    else if(meta.stage==="result")show("T-result-"+raid,TeacherResult);
+    else show("T-setup-"+raid,TeacherSetup);
+    drawGrant();
+  }else studentRoute();
+}
+function renderBar(){
+  const {meta}=D();
+  const mode=Store.mode==="local"?"테스트 모드":"온라인";
+  if(S.role==="teacher"){
+    const gp=Object.values(S.room.growth||{}).filter(g=>g&&g.status==="pending").length;
+    setHTML(bar,`<span>${esc(meta.title||"레이드 방")}</span><span class="code">${S.code}</span><button class="btn small" data-act="qr">QR 보기</button>
+      <span class="dim">선생님 비밀번호 ${esc(meta.pin)}</span><span class="badge">${mode}</span>
+      <button class="btn small${gp?" go":""}" data-act="tPage" data-p="growth">🌱 성장 글 ${gp}</button><span class="sp"></span>
+      ${sndBtn()}<button class="btn small" data-act="exitRoom">나가기</button>`);
+  }else{
+    const u=S.user;
+    setHTML(bar,`<span>${esc(u.num+"번 "+u.name)}</span><span class="dim">${esc(meta.title||"")} ${S.code}</span><span class="badge">${mode}</span>
+      <span class="sp"></span>${sndBtn()}<button class="btn small" data-act="exitRoom">방 나가기</button>`);
+  }
+}
+function lobbyBar(){const u=S.user;setHTML(bar,`<span>${esc(u.num+"번 "+u.name)}</span><span class="sp"></span>${sndBtn()}<button class="btn small" data-act="logout">로그아웃</button>`);}
+
+/* ---------------- 배틀 화면 조각 ---------------- */
+function hpClass(r){return r>0.5?"":r>0.2?"y":"r";}
+function hpBar(hp,max){const r=max?hp/max:0;return `<div class="hp"><b>HP</b><div class="track"><div class="fill ${hpClass(r)}" style="width:${(r*100).toFixed(1)}%"></div></div></div>`;}
+function setHp(wrap,hp,max){const f=wrap.querySelector(".fill"),r=max?hp/max:0;f.style.width=(r*100).toFixed(1)+"%";f.className="fill "+hpClass(r);}
+function sceneHTML(boss,me){
+  return `<div class="scene">
+    <div class="pad foe"></div><div class="pad me"></div>
+    <div class="foe-spr" data-r="foe">${spr(boss,false)}</div>
+    <div class="me-spr" data-r="me">${me?spr(me,true):""}</div>
+    <div class="ibox foe"><div class="row"><span class="nm">${esc(nameOf(boss))}</span><span class="lv">Lv70</span></div>
+      <div data-r="foehp">${hpBar(1,1)}</div><div class="num" data-r="foenum"></div></div>
+    <div class="ibox me" data-r="mebox" hidden><div class="row"><span class="nm" data-r="mename"></span><span class="lv">Lv50</span></div>
+      ${hpBar(1,1)}<div class="num" data-r="menum"></div></div>
+  </div>`;
+}
+function updateFoe(R){const {meta,hp,hits}=D();setHp(R.foehp,hp,meta.maxHp);R.foenum.textContent=`명중 ${hits} / ${meta.maxHp}`;}
+function monGrid(st,act,pickMon){
+  const mons=arr(st.mons),used=arr(st.used),all=allUsed(st);
+  return mons.map(id=>{const u=!all&&used.includes(id),p=pickMon===id;
+    return `<button class="mon${u?" used":""}${p?" pick":""}" ${u?"disabled":""} data-act="${act}" data-id="${id}">${spr(id,false)}<span class="n">${esc(nameOf(id))}</span>${p?'<span class="tag">출전 예약</span>':""}</button>`;}).join("");
+}
+function resultHTML(extra){
+  const {meta,raid,room,hits}=D();
+  const hist=(room.history||{})["r"+raid],caught=meta.result==="caught",n=nameOf(meta.boss);
+  return `<section class="win result ${caught?"caught":"fled"}">
+    <div class="rspr">${spr(meta.boss,false)}</div>
+    <p class="big">${caught?`${esc(josa(n,"을","를"))} 잡았다!`:`${esc(josa(n,"이","가"))} 도망쳤다…`}</p>
+    <p>명중 ${hist?hist.hits:hits}번 (잡으려면 ${meta.maxHp}번 필요, 크리티컬은 2번)</p>${extra||""}</section>`;
+}
+
+/* ---------------- 포켓몬 정보 (공격력, 진화) ----------------
+   공격력 = 종족값 합계. 진화 정보와 종족값은 PokeAPI 자료를 불러와서 이 기기에 저장해 둬요. */
+const GD={bst:{},children:{},ready:false,failed:false};
+function applyGD(d){GD.bst=d.bst;GD.children={};for(const[c,p]of Object.entries(d.par))(GD.children[p]=GD.children[p]||[]).push(+c);GD.ready=true;}
+async function loadGameData(){
+  let cached=null;try{cached=JSON.parse(localStorage.getItem("pkraid-gd1"));}catch(e){}
+  if(cached&&cached.bst){applyGD(cached);if(Date.now()-cached.at<7*864e5)return;}
+  try{
+    const base="https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/";
+    const [sp,stt]=await Promise.all(["pokemon_species.csv","pokemon_stats.csv"].map(f=>fetch(base+f).then(r=>{if(!r.ok)throw new Error(f);return r.text();})));
+    const par={},bst={};
+    const L1=sp.trim().split("\n"),h1=L1[0].trim().split(","),iI=h1.indexOf("id"),iP=h1.indexOf("evolves_from_species_id");
+    for(const l of L1.slice(1)){const c=l.split(",");const p=+c[iP];if(p)par[+c[iI]]=p;}
+    const L2=stt.trim().split("\n"),h2=L2[0].trim().split(","),jI=h2.indexOf("pokemon_id"),jB=h2.indexOf("base_stat");
+    for(const l of L2.slice(1)){const c=l.split(",");const id=+c[jI];if(id>0&&id<10000)bst[id]=(bst[id]||0)+(+c[jB]||0);}
+    if(Object.keys(bst).length<400||Object.keys(par).length<100)throw new Error("data");
+    const d={bst,par,at:Date.now()};applyGD(d);
+    try{localStorage.setItem("pkraid-gd1",JSON.stringify(d));}catch(e){}
+  }catch(e){if(!GD.ready)GD.failed=true;}
+  if(S.role)render();
+}
+function power(st,id){const b=GD.bst[id]||null,bonus=((st&&st.boosts)||{})["p"+id]||0;return {base:b,bonus,total:b?b+bonus:null};}
+function powText(p){return p.total?`${p.total}${p.bonus?` (+${p.bonus})`:""}`:(GD.failed?"정보 없음":"불러오는 중")+(p.bonus?` (+${p.bonus})`:"");}
+function josaRo(w){const c=w.charCodeAt(w.length-1);if(c>=0xAC00&&c<=0xD7A3){const j=(c-0xAC00)%28;return w+(j&&j!==8?"으로":"로");}return w+"(으)로";}
+
+/* ---------------- 아이템과 꾸미기 ---------------- */
+const ITEMS={
+  atk:{n:"파워 사탕",e:"🍬",d:"포켓몬 한 마리의 공격력이 30 올라가요."},
+  deco:{n:"꾸미기 상자",e:"🎁",d:"열면 대표 포켓몬 꾸미기가 랜덤으로 나와요. 아주 가끔 배경이 나와요!"},
+  evo:{n:"진화의 마음",e:"💜",d:"포켓몬 한 마리를 진화시켜요. 최종 진화한 포켓몬에는 쓸 수 없어요."}
+};
+const SLOTS={head:"머리",face:"얼굴",hold:"손",aura:"주변",bg:"배경"};
+const DECOS={
+  ribbon:["빨간 리본","🎀","head"],crown:["작은 왕관","👑","head"],tophat:["실크해트","🎩","head"],sakura:["벚꽃 핀","🌸","head"],
+  sunflower:["해바라기 핀","🌻","head"],gradcap:["학사모","🎓","head"],cap:["야구 모자","🧢","head"],hibiscus:["히비스커스","🌺","head"],
+  tulip:["튤립 핀","🌷","head"],santa:["산타 모자","🎅","head"],
+  shades:["선글라스","🕶️","face"],glasses:["동그란 안경","👓","face"],blush:["하트 스티커","💗","face"],starsticker:["별 스티커","⭐","face"],
+  balloon:["풍선","🎈","hold"],lolly:["막대사탕","🍭","hold"],rose:["장미","🌹","hold"],clover:["네잎클로버","🍀","hold"],
+  bouquet:["꽃다발","💐","hold"],trophy:["트로피","🏆","hold"],icecream:["아이스크림","🍦","hold"],bell:["방울","🔔","hold"],
+  carp:["잉어 깃발","🎏","hold"],umbrella:["우산","☂️","hold"],mic:["마이크","🎤","hold"],
+  butterfly:["나비","🦋","aura"],hearts:["하트 뿅뿅","💖","aura"],notes:["음표","🎵","aura"],snow:["눈송이","❄️","aura"],
+  moon:["초승달","🌙","aura"],leaf:["나뭇잎","🍃","aura"],shine:["별빛","🌟","aura"],rainbow:["작은 무지개","🌈","aura"],comet:["별똥별","💫","aura"]
+};
+const BGS={
+  heart:{n:"하트 무대",g:"linear-gradient(180deg,#4a7fe0 0%,#c88ae0 28%,#f8b4c8 50%,#ffd890 74%,#ffe8b0 100%)",b:"🎀💗🎀💗🎀💗🎀",c:"linear-gradient(#e8c8ff,#9a6ae0)"},
+  night:{n:"별빛 밤하늘",g:"radial-gradient(circle at 70% 20%,#fff6 0 2%,transparent 3%),radial-gradient(circle at 20% 35%,#fff8 0 1.5%,transparent 2.5%),linear-gradient(#0b1a4a,#2c3a8a 60%,#5a4aa0)",b:"🌙⭐✨⭐🌙⭐✨",c:"linear-gradient(#2a2a6a,#14143a)"},
+  flower:{n:"꽃밭",g:"linear-gradient(#bfe8ff,#e8f8d8 60%,#b8e890)",b:"🌷🌼🌸🌻🌷🌼🌸",c:"linear-gradient(#7acb5a,#3f9a3a)"},
+  sea:{n:"바닷속",g:"linear-gradient(#7fd8f8,#2a8ad0 60%,#1a4a9a)",b:"🐚🐠🌊🐟🐚🐠🌊",c:"linear-gradient(#f0d898,#d8b060)"},
+  snow:{n:"눈 내리는 숲",g:"linear-gradient(#cfe4fa,#f4f8ff 70%)",b:"🌲❄️⛄❄️🌲❄️⛄",c:"linear-gradient(#ffffff,#cfe2f4)"},
+  rainbow:{n:"무지개 언덕",g:"linear-gradient(180deg,#ff9a9a,#ffd27a,#fff59a,#a8f0a0,#9ad0ff,#c8a8ff)",b:"🌈☁️🌈☁️🌈☁️🌈",c:"linear-gradient(#ffffff,#e8f4ff)"},
+  space:{n:"우주 여행",g:"radial-gradient(circle at 30% 30%,#6a4ab0,#120a2a 70%)",b:"🚀⭐🌍⭐🚀⭐🌍",c:"linear-gradient(#2a1a4a,#0a0618)"},
+  sunset:{n:"노을 해변",g:"linear-gradient(#ff8a5a,#ffb86a 40%,#ffd890 58%,#7ac8e8 60%,#4a9ad0)",b:"🌴🐚🦀🌴🐚🦀🌴",c:"linear-gradient(#f8e0a8,#e0b870)"}
+};
+const repOf=st=>{const m=arr(st&&st.mons);return m.includes(st.rep)?st.rep:(m[0]||null);};
+function owned(st){const s=new Set(arr(st.mons));Object.keys(st.dex||{}).forEach(k=>s.add(+k.slice(1)));return s;}
+function repCard(st){
+  const id=repOf(st),d=st.deco||{},bg=BGS[d.bg];
+  const pos=d.pos||{},size=d.size||{};
+  const acc=["aura","head","face","hold"].map(s=>{if(!d[s]||!DECOS[d[s]])return "";
+    const st=(pos[s]?`left:${pos[s].x}%;top:${pos[s].y}%;`:"")+(size[s]?`--s:${size[s]};`:"");
+    return `<span class="acc ${s}" data-slot="${s}"${st?` style="${st}"`:""}>${DECOS[d[s]][1]}</span>`;}).join("");
+  return `<div class="rcard" ${bg?`style="background:${bg.g}"`:""}>${bg?`<div class="band" style="background:${bg.c}">${bg.b}</div>`:""}
+    <div class="stage">${id?spr(id,false):'<span class="egg">🥚</span>'}${acc}</div></div>`;
+}
+function pageHead(title){return `<div class="phead"><button class="btn small" data-act="page" data-p="hub">← 돌아가기</button><h2>${title}</h2></div>`;}
+const today=()=>new Date().toLocaleDateString("sv-SE");
+
+
+/* ---------------- 홈 ---------------- */
+function HomeView(){return{mount(m){
+  homeBar();Snd.bgm("title");
+  const pre=S.pending;
+  m.append(h(`<div>
+    <div class="hero"><div class="imgs">${spr(384,false)}${spr(249,false)}${spr(483,false)}</div>
+      <h1>전설 레이드</h1><p>소수 계산을 맞혀서 전설의 포켓몬을 잡아라!</p></div>
+    <div class="homegrid">
+      <section class="win"><h2>학생</h2>
+        ${pre?`<p class="hint">방 ${esc(pre)}에 들어가려면 먼저 로그인해 주세요.</p>`:""}
+        <div class="two"><div><label class="lbl" for="lNum">번호</label><input id="lNum" type="number" min="1" max="99" inputmode="numeric"></div>
+          <div><label class="lbl" for="lName">이름</label><input id="lName" maxlength="10" autocomplete="off"></div></div>
+        <label class="lbl" for="lPw">비밀번호 (4자리 이상)</label><input id="lPw" type="password" autocomplete="off">
+        <button class="btn blue big" data-act="login">로그인</button>
+        <button class="btn big" data-act="signup">처음이에요 (계정 만들기)</button></section>
+      <section class="win"><h2>선생님</h2>
+        <label class="lbl" for="tTitle">방 이름</label><input id="tTitle" maxlength="20" placeholder="예: 5학년 3반" autocomplete="off">
+        <button class="btn go big" data-act="create">새 방 만들기</button>
+        <details><summary>만들어 둔 방 다시 열기</summary>
+          <label class="lbl" for="rCode">방 코드</label><input id="rCode" inputmode="numeric" maxlength="6">
+          <label class="lbl" for="rPin">선생님 비밀번호</label><input id="rPin" inputmode="numeric" maxlength="4">
+          <button class="btn big" data-act="reopen">다시 열기</button></details></section>
+    </div>
+    ${Store.mode==="local"?'<p class="modenote">지금은 테스트 모드예요. 같은 컴퓨터의 다른 탭끼리만 함께할 수 있어요.</p>':""}
+  </div>`));
+  ["lNum","lName","lPw"].forEach(id=>$("#"+id).addEventListener("keydown",e=>{if(e.key==="Enter")ACT.login();}));
+}};}
+
+/* ---------------- 학생: 로그인 후 첫 화면 ---------------- */
+function StudentLobby(){
+  let R;
+  return{
+    mount(m){
+      const u=S.user;lobbyBar();Snd.bgm("title");
+      const el=h(`<section class="win" style="max-width:640px;margin:0 auto">
+        <h2>안녕하세요, ${esc(u.num+"번 "+u.name)}!</h2>
+        <label class="lbl" for="rc">선생님이 알려 준 방 코드</label>
+        <div class="stepper"><input id="rc" inputmode="numeric" maxlength="6" style="flex:1;width:auto" autocomplete="off">
+          <button class="btn blue" data-act="joinCode">들어가기</button></div>
+        <h2 class="mt">내 레이드 방</h2><div class="rooms" data-r="rooms"><p class="hint">불러오는 중…</p></div>
+      </section>`);
+      m.append(el);R=refs(el);
+      $("#rc").addEventListener("keydown",e=>{if(e.key==="Enter")ACT.joinCode();});
+      this.load();
+    },
+    async load(){
+      const rooms=(await Store.get(`accounts/${S.user.key}/rooms`))||{};
+      const codes=Object.keys(rooms);
+      const metas=await Promise.all(codes.map(c=>Store.get(`rooms/${c}/meta`)));
+      if(!R.rooms.isConnected)return;
+      const list=codes.map((c,i)=>[c,metas[i]]).filter(([,mt])=>mt);
+      R.rooms.innerHTML=list.length?list.map(([c,mt])=>`<button class="btn" data-act="openRoom" data-code="${c}">${esc(mt.title||"레이드 방")} <span class="hint">${c}</span></button>`).join("")
+        :'<p class="hint">아직 들어간 방이 없어요. 위에 방 코드를 입력해 주세요.</p>';
+    }
+  };
+}
+async function joinRoom(code){
+  if(!/^\d{6}$/.test(code)){toast("방 코드 6자리를 입력해 주세요.");return false;}
+  const meta=await Store.get(`rooms/${code}/meta`);
+  if(!meta){toast("그런 방이 없어요. 방 코드를 확인해 주세요.");return false;}
+  const u=S.user;
+  if(!(await Store.get(`rooms/${code}/students/${u.key}`)))
+    await Store.set(`rooms/${code}/students/${u.key}`,{name:u.name,num:u.num,joined:Date.now()});
+  await Store.set(`accounts/${u.key}/rooms/${code}`,true);
+  return enterRoom("student",code);
+}
+async function readLogin(){
+  const num=parseInt($("#lNum").value),name=$("#lName").value.trim(),pw=$("#lPw").value;
+  if(!(num>=1&&num<=99)){toast("번호를 입력해 주세요.");return null;}
+  if(!name){toast("이름을 입력해 주세요.");return null;}
+  if(pw.length<4){toast("비밀번호를 4자리 이상 입력해 주세요.");return null;}
+  const key=userKey(name,num);
+  return {key,name,num,pw:await hashPw(key,pw)};
+}
+async function afterLogin(u){
+  S.user=u;ls().setItem("pkraid-user",JSON.stringify(u));
+  if(!localStorage.getItem("pkraid-snd"))Snd.setMode("sfx");
+  if(S.pending){const c=S.pending;S.pending=null;if(await joinRoom(c))return;}
+  show("lobby",StudentLobby);
+}
+
+/* ---------------- 선생님: 준비 ---------------- */
+function TeacherSetup(){
+  let R;
+  return{
+    mount(m){
+      const {meta}=D();
+      if(T.boss==null)T.boss=meta.boss||150;
+      if(T.hp==null)T.hp=meta.maxHp||10;
+      const el=h(`<div>
+        <div class="tgrid">
+          <section class="win"><h2>학생 <span data-r="cnt"></span></h2><p class="hint" data-r="hint"></p>
+            <div class="tools"><label class="chk"><input type="checkbox" id="selAll"> 모두 선택</label><span class="sp"></span>
+              <button class="btn small blue" data-act="grantSel" data-r="gbtn">선택한 학생에게 포켓몬 주기</button></div>
+            <div class="slist" data-r="list"></div></section>
+          <section class="win"><h2 data-r="title"></h2>
+            <div class="bp" data-r="bp"></div>
+            <div class="bossgrid">${LEGENDS.map(([id,n])=>`<button data-act="pickBoss" data-id="${id}" aria-pressed="${id===T.boss}">${spr(id,false).replace("<img ",'<img loading="lazy" ')}<span>${n}</span></button>`).join("")}</div>
+            <label class="lbl" for="hpIn">몇 명이 맞히면 잡을까요?</label>
+            <p class="hint">지금 접속해 있고 포켓몬이 있는 학생만 참여해요. 한 명당 기회는 한 번이고, 크리티컬이 터지면 2번으로 세요.</p>
+            <div class="stepper"><button class="btn small" data-act="hpStep" data-d="-1" aria-label="줄이기">−</button>
+              <input id="hpIn" type="number" min="1" max="99" inputmode="numeric" value="${T.hp}">
+              <button class="btn small" data-act="hpStep" data-d="1" aria-label="늘리기">+</button>
+              <button class="btn small" data-act="hpAll">참여 학생 수만큼</button></div>
+            <p class="hint" data-r="parthint"></p>
+            <button class="btn go big" data-act="startRaid">레이드 시작</button>
+          </section>
+        </div>
+        <section class="win mt" data-r="histwrap"><h2>지난 레이드</h2><ul class="hist" data-r="hist"></ul></section>
+      </div>`);
+      m.append(el);R=refs(el);
+      $("#hpIn").addEventListener("input",e=>{const v=parseInt(e.target.value);if(v>=1&&v<=99)T.hp=v;});
+      R.list.addEventListener("change",e=>{const c=e.target.closest("input[data-sid]");if(!c)return;
+        if(c.checked)T.sel.add(c.dataset.sid);else T.sel.delete(c.dataset.sid);this.update();});
+      $("#selAll").addEventListener("change",e=>{T.sel=new Set(e.target.checked?Object.keys(D().students):[]);this.update();});
+      this.boss();
+    },
+    boss(){R.bp.innerHTML=`${spr(T.boss,false)}<div><b>${esc(nameOf(T.boss))}</b><p class="hint">아래에서 골라 주세요</p></div>`;},
+    update(){
+      const {meta,students,room}=D();const list=sorted(students);
+      for(const k of [...T.sel])if(!students[k])T.sel.delete(k);
+      const on=list.filter(([k])=>isOnline(k)).length;
+      const ready=list.filter(([k,s])=>isOnline(k)&&arr(s.mons).length).length;
+      R.cnt.textContent=`${list.length}명`;
+      R.hint.textContent=list.length?`지금 접속 중 ${on}명`:`학생들이 로그인한 뒤 방 코드 ${S.code}를 입력하면 여기에 나와요.`;
+      R.gbtn.disabled=!T.sel.size;
+      R.gbtn.textContent=T.sel.size?`선택한 ${T.sel.size}명에게 포켓몬 주기`:"선택한 학생에게 포켓몬 주기";
+      $("#selAll").checked=list.length>0&&T.sel.size===list.length;
+      R.title.textContent=`${(meta.raidNo||0)+1}번째 레이드 준비`;
+      R.parthint.textContent=`지금 시작하면 ${ready}명이 참여해요.`;
+      setHTML(R.list,list.map(([sid,st])=>{
+        const mons=arr(st.mons),used=arr(st.used),all=allUsed(st),online=isOnline(sid);
+        const pick=st.pick&&st.pick.raid===(meta.raidNo||0)+1?st.pick.mon:null;
+        const icons=mons.map(id=>`<span class="mini${!all&&used.includes(id)?" used":""}${pick===id?" pick":""}" title="${esc(nameOf(id))}">${spr(id,false)}</span>`).join("");
+        return `<div class="srow"><input type="checkbox" data-sid="${sid}" ${T.sel.has(sid)?"checked":""} aria-label="${esc(st.name)} 선택">
+          <span class="dot${online?" on":""}" title="${online?"접속 중":"접속 안 함"}"></span>
+          <span class="who">${st.num}번 ${esc(st.name)}</span>
+          <span class="icons">${icons||'<span class="hint">포켓몬 없음</span>'}</span>
+          <button class="btn small" data-act="grantOne" data-sid="${sid}">포켓몬</button>
+          <button class="btn small" data-act="resetPw" data-sid="${sid}" title="비밀번호를 1234로 바꿔요">비번</button>
+          <button class="x" data-act="delStudent" data-sid="${sid}" aria-label="${esc(st.name)} 방에서 빼기">×</button></div>`;
+      }).join(""));
+      const hs=Object.entries(room.history||{}).sort((a,b)=>parseInt(a[0].slice(1))-parseInt(b[0].slice(1)));
+      R.histwrap.hidden=!hs.length;
+      setHTML(R.hist,hs.map(([k,x])=>`<li>${spr(x.boss,false)}<span>${k.slice(1)}번째: ${esc(nameOf(x.boss))}, ${x.result==="caught"?"잡았어요":"도망쳤어요"} (명중 ${x.hits}/${x.maxHp})</span></li>`).join(""));
+    }
+  };
+}
+
+/* 포켓몬 주기 창 */
+function openGrant(sids){
+  if(!sids.length)return;
+  T.grant={sids};
+  const {students}=D();
+  const names=sids.map(k=>students[k]).filter(Boolean).map(s=>`${s.num}번 ${s.name}`);
+  modal.innerHTML=`<div class="win grant"><h2>포켓몬 주기</h2>
+    <p>${esc(names.length>3?`${names.slice(0,3).join(", ")} 외 ${names.length-3}명`:names.join(", "))}</p>
+    <label class="lbl" for="gq">포켓몬 이름으로 찾기</label><input id="gq" placeholder="예: 피카츄" autocomplete="off">
+    <ul class="sugg" id="gsugg"></ul><div id="gmons"></div>
+    <button class="btn big" data-act="closeModal">다 했어요</button></div>`;
+  modal.hidden=false;
+  const q=$("#gq");
+  q.addEventListener("input",()=>{
+    const res=search(q.value);
+    $("#gsugg").innerHTML=q.value.trim()&&!res.length?'<li class="no">그런 이름의 포켓몬이 없어요.</li>'
+      :res.map(([id,n])=>`<li><button data-act="grantAdd" data-id="${id}">${spr(id,false)}<span>${esc(n)}</span></button></li>`).join("");
+  });
+  drawGrant();q.focus();
+}
+function drawGrant(){
+  const el=$("#gmons");if(!T.grant||!el||!S.room)return;
+  const {students}=D();const sids=T.grant.sids.filter(k=>students[k]);
+  if(sids.length===1){
+    const mons=arr(students[sids[0]].mons);
+    setHTML(el,`<h2 class="mt">가지고 있는 포켓몬 ${mons.length}마리</h2><div class="mons">${mons.length?mons.map(id=>`<div class="mon">${spr(id,false)}<span class="n">${esc(nameOf(id))}</span><button class="del" data-act="grantDel" data-id="${id}" aria-label="${esc(nameOf(id))} 빼기">×</button></div>`).join(""):'<p class="hint">아직 없어요. 위에서 찾아서 눌러 주세요.</p>'}</div>`);
+  }else setHTML(el,`<p class="hint mt">찾은 포켓몬을 누르면 선택한 ${sids.length}명 모두에게 들어가요. 이미 가진 학생은 그대로예요.</p>`);
+}
+
+/* ---------------- 선생님: 레이드 진행 ---------------- */
+function TeacherRaid(){
+  let R;
+  return{
+    mount(m){
+      const {meta,atts,parts}=D();
+      T.queue=[];T.playing=false;
+      T.seen=new Set(Object.entries(atts).filter(([,a])=>a&&a.status!=="pending").map(([k])=>k));
+      const el=h(`<div class="tgrid">
+        <div class="battle">${sceneHTML(meta.boss)}<div class="dlg"><div class="in" data-r="msg"></div></div></div>
+        <section class="win"><h2>${meta.raidNo}번째 레이드 (참여 ${Object.keys(parts).length}명)</h2><div class="tally" data-r="tally"></div>
+          <div class="chips" data-r="chips"></div><button class="btn go big" data-act="endRaid">레이드 종료</button></section>
+      </div>`);
+      m.append(el);R=refs(el);
+      R.foe.classList.add("appear");setTimeout(()=>Snd.cry(meta.boss),500);
+      R.msg.textContent=`야생의 ${josa(nameOf(meta.boss),"이","가")} 나타났다!`;
+    },
+    update(){
+      const {students,atts,parts}=D();updateFoe(R);
+      const list=sorted(students).filter(([k])=>parts[k]||atts[k]);let c={hit:0,miss:0,pending:0,idle:0};
+      setHTML(R.chips,list.map(([sid,st])=>{
+        const a=atts[sid];let cls="idle",txt="포켓몬 고르는 중";
+        if(a){cls=a.status;txt=a.status==="hit"?`${nameOf(a.mon)} ${a.crit?"크리티컬! (2번)":"명중"}`:a.status==="miss"?`${nameOf(a.mon)} 빗나감`:`${nameOf(a.mon)} 문제 푸는 중`;}
+        c[cls]++;
+        return `<div class="chip ${cls}"><span class="dot${isOnline(sid)?" on":""}"></span> ${st.num}번 ${esc(st.name)}<small>${esc(txt)}</small></div>`;
+      }).join(""));
+      setHTML(R.tally,`<span><b>${c.hit}</b>명중</span><span><b>${c.miss}</b>빗나감</span><span><b>${c.pending}</b>푸는 중</span><span><b>${c.idle}</b>고르는 중</span>`);
+      Object.entries(atts).filter(([k,a])=>a&&a.status!=="pending"&&!T.seen.has(k))
+        .sort((x,y)=>(x[1].done||0)-(y[1].done||0))
+        .forEach(([k,a])=>{T.seen.add(k);const st=students[k];T.queue.push({who:st?`${st.num}번 ${st.name}`:"",name:st?st.name:"",mon:a.mon,hit:a.status==="hit",crit:!!a.crit});});
+      playNext(R);
+    }
+  };
+}
+
+function playNext(R){
+  if(T.playing||!T.queue.length||!R.msg.isConnected)return;
+  T.playing=true;const ev=T.queue.shift();const fast=T.queue.length>4;
+  R.me.className="me-spr";R.me.innerHTML=spr(ev.mon,true);R.mebox.hidden=false;
+  R.mename.textContent=nameOf(ev.mon);R.menum.textContent=ev.who;
+  restart(R.me,"lunge");restart(R.foe,ev.hit?"hurt":"dodge");
+  R.msg.textContent=ev.hit?`${ev.name}의 ${nameOf(ev.mon)}! 공격이 명중했다!`:`${ev.name}의 ${nameOf(ev.mon)}! 공격이 빗나갔다!`;
+  if(!ev.hit)R.me.classList.add("fainted");
+  if(!fast)Snd.cry(ev.mon);setTimeout(()=>Snd.sfx(ev.hit?"hit":"miss"),fast?200:450);
+  if(ev.crit){R.msg.textContent=`크리티컬! ${ev.name}의 ${nameOf(ev.mon)}! 급소에 맞아서 두 번 명중했다!`;
+    setTimeout(()=>{if(!R.foe.isConnected)return;critFx(R.foe.parentElement);restart(R.me,"lunge");restart(R.foe,"hurt");Snd.sfx("hit");},700);}
+  setTimeout(()=>{T.playing=false;playNext(R);},ev.crit?2200:fast?700:1500);
+}
+
+/* ---------------- 선생님: 결과 ---------------- */
+function TeacherResult(){return{mount(m){
+  Snd.once(D().meta.result==="caught"?"win":"lose");
+  m.append(h(`<div>${resultHTML('<button class="btn blue big" data-act="nextRaid">다음 레이드 준비</button>')}</div>`));
+}};}
+
+/* ---------------- 학생 화면 고르기 ---------------- */
+function studentRoute(){
+  const {meta,students,raid,atts,parts}=D();const me=students[S.sid];
+  if(!me){toast("선생님이 이 방 명단에서 뺐어요.");exitRoom();return;}
+  if(meta.stage==="raid"){
+    if(atts[S.sid])return show("S-battle-"+raid,StudentBattle);
+    if(parts[S.sid]&&arr(me.mons).length){
+      const pick=me.pick;
+      if(pick&&pick.raid===raid&&available(me).includes(pick.mon))createAttempt(pick.mon);
+      return show("S-pick-"+raid,StudentPick);
+    }
+  }
+  if(meta.stage==="result"&&S.ack!==raid)return show("S-result-"+raid,StudentResult);
+  const pg=PAGES[S.page]?S.page:"hub";
+  show("S-"+pg,PAGES[pg]);
+}
+
+async function createAttempt(mon){
+  const {meta,students,raid,atts}=D();
+  if(meta.stage!=="raid"||atts[S.sid]||S.creating===raid)return;
+  const me=students[S.sid];let used=arr(me.used);
+  if(allUsed(me))used=[];
+  if(used.includes(mon))return;
+  S.creating=raid;used.push(mon);
+  const p=makeProblem();
+  try{
+    await Store.update("rooms/"+S.code,{
+      [`attempts/r${raid}/${S.sid}`]:{mon,text:p.text,ans:p.ans,unit:p.unit,status:"pending",at:Date.now()},
+      [`students/${S.sid}/used`]:used,[`students/${S.sid}/pick`]:null});
+  }catch(e){S.creating=null;toast("저장하지 못했어요. 다시 눌러 주세요.");}
+}
+
+
+function search(q){
+  q=q.replace(/\s/g,"");if(!q)return[];
+  const out=[];
+  for(const [id,n] of Object.entries(NAMES)){const i=n.indexOf(q);if(i>=0)out.push([+id,n,i]);}
+  return out.sort((a,b)=>a[2]-b[2]||a[0]-b[0]).slice(0,10);
+}
+/* ---------------- 학생: 내 화면 ---------------- */
+function StudentHub(){
+  let R;
+  return{
+    mount(m){
+      const el=h(`<div>
+        <section class="win hubtop"><div class="me" data-r="me"></div>
+          <div class="hubinfo"><h2 data-r="hi"></h2><p data-r="status"></p><p class="hint" data-r="repname"></p></div></section>
+        <div class="banners">
+          <button class="banner b1" data-act="page" data-p="mons"><span class="ic">🎒</span><b>내 포켓몬 보기</b><small data-r="c1"></small></button>
+          <button class="banner b2" data-act="page" data-p="dex"><span class="ic">📕</span><b>포켓몬 도감</b><small data-r="c2"></small></button>
+          <button class="banner b3" data-act="page" data-p="rep"><span class="ic">⭐</span><b>대표 포켓몬 설정</b><small>꾸미기도 여기서 해요</small></button>
+          <button class="banner b4" data-act="page" data-p="growth"><span class="ic">🌱</span><b>오늘의 성장</b><small data-r="c4"></small></button>
+          <button class="banner b5" data-act="page" data-p="items"><span class="ic">🎁</span><b>내 아이템</b><small data-r="c5"></small><span class="badge2" data-r="b5" hidden></span></button>
+        </div>
+        <section class="win mt"><h2>우리 반 친구들 <span data-r="cnt"></span></h2><div class="friends" data-r="friends"></div></section>
+      </div>`);
+      m.append(el);R=refs(el);
+    },
+    update(){
+      const {meta,students,parts,room}=D();const st=students[S.sid];const mons=arr(st.mons);const rep=repOf(st);
+      setHTML(R.me,repCard(st));
+      R.hi.textContent=`${st.num}번 ${st.name}`;
+      R.repname.textContent=rep?`대표 포켓몬: ${nameOf(rep)}`:"";
+      R.status.textContent=meta.stage==="raid"?(parts[S.sid]?"레이드 진행 중이에요!":"레이드가 진행 중이에요. 다음 레이드부터 함께해요.")
+        :!mons.length?"아직 포켓몬이 없어요. 선생님께 포켓몬을 받으면 레이드에 나갈 수 있어요."
+        :"선생님이 레이드를 시작하면 바로 싸울 수 있어요!";
+      R.c1.textContent=`${mons.length}마리`;
+      R.c2.textContent=`${owned(st).size}마리 모음`;
+      const mine=Object.values(room.growth||{}).filter(g=>g&&g.sid===S.sid);
+      const pend=mine.filter(g=>g.status==="pending").length,todayN=mine.filter(g=>g.date===today()).length;
+      R.c4.textContent=pend?`선생님 확인 중 ${pend}개`:todayN?`오늘 ${todayN}개 썼어요`:"오늘 성장한 점을 써 봐요";
+      const it=st.items||{},tot=(it.atk||0)+(it.deco||0)+(it.evo||0);
+      R.c5.textContent=tot?`아이템 ${tot}개`:"받은 아이템이 없어요";
+      R.b5.hidden=!tot;R.b5.textContent=tot;
+      const list=sorted(students);
+      R.cnt.textContent=`${list.length}명`;
+      setHTML(R.friends,list.map(([k,s])=>{const r=repOf(s);
+        return `<div class="fcard${k===S.sid?" mine":""}">${repCard(s)}<div class="fname"><span class="dot${isOnline(k)?" on":""}"></span> ${s.num}번 ${esc(s.name)}</div><div class="fmon">${r?esc(nameOf(r)):"포켓몬 없음"}</div></div>`;
+      }).join(""));
+    }
+  };
+}
+
+function StudentMons(){
+  let R;
+  return{
+    mount(m){
+      const el=h(`<div>${pageHead("내 포켓몬")}<section class="win"><p class="hint" data-r="note"></p><div class="mcards mt" data-r="grid"></div></section></div>`);
+      m.append(el);R=refs(el);
+    },
+    update(){
+      const {meta,students}=D();const st=students[S.sid];
+      const mons=arr(st.mons),used=arr(st.used),all=allUsed(st),rep=repOf(st);
+      const nextRaid=(meta.raidNo||0)+1,pick=st.pick&&st.pick.raid===nextRaid?st.pick.mon:null,canPick=meta.stage!=="raid";
+      R.note.textContent=!mons.length?"아직 받은 포켓몬이 없어요. 선생님께 포켓몬을 받으면 여기에 나타나요."
+        :canPick?"'다음 출전'을 누르면 다음 레이드에 나갈 포켓몬을 미리 정할 수 있어요. 회색 포켓몬은 다른 포켓몬을 모두 한 번씩 쓸 때까지 쉬어요.":"";
+      setHTML(R.grid,mons.map(id=>{
+        const u=!all&&used.includes(id),p=power(st,id);
+        return `<div class="mcard${u?" used":""}${pick===id?" pick":""}">${spr(id,false)}<b>${esc(nameOf(id))}</b>
+          <span class="pw">공격력 ${powText(p)}</span>${p.total?`<span class="hint">크리티컬 ${(p.total/1000).toFixed(3)}%</span>`:""}<span class="hint">${rep===id?"⭐ 대표 포켓몬":u?"쉬는 중":"&nbsp;"}</span>
+          ${canPick&&!u?`<button class="btn small" data-act="prePick" data-id="${id}">${pick===id?"출전 예약됨":"다음 출전"}</button>`:""}</div>`;
+      }).join(""));
+    }
+  };
+}
+
+const GENS=[[1,151,"1세대"],[152,251,"2세대"],[252,386,"3세대"],[387,493,"4세대"],[494,649,"5세대"],[650,721,"6세대"],[722,809,"7세대"],[810,905,"8세대"],[906,1025,"9세대"]];
+function StudentDex(){
+  let R;
+  return{
+    mount(m){
+      if(S.dexGen==null)S.dexGen=0;
+      const el=h(`<div>${pageHead("포켓몬 도감")}<section class="win"><p data-r="sum"></p><div class="tabs" data-r="tabs"></div><div class="dexgrid" data-r="grid"></div></section></div>`);
+      m.append(el);R=refs(el);
+    },
+    update(){
+      const st=D().students[S.sid],own=owned(st);
+      const gens=GENS.filter(([a],i)=>i<4||NAMES[a]);
+      if(S.dexGen>=gens.length)S.dexGen=0;
+      R.sum.textContent=`지금까지 모은 포켓몬 ${own.size}마리. 한 번이라도 가졌던 포켓몬은 진화 전 모습도 계속 남아 있어요.`;
+      setHTML(R.tabs,gens.map(([a,b,n],i)=>{let c=0;for(let x=a;x<=b;x++)if(own.has(x))c++;
+        return `<button class="btn small" data-act="dexGen" data-i="${i}" aria-pressed="${i===S.dexGen}">${n} ${c}/${b-a+1}</button>`;}).join(""));
+      const [a,b]=gens[S.dexGen];let html="";
+      for(let x=a;x<=b;x++){const o=own.has(x);
+        html+=`<div class="dx${o?" own":""}"><img class="spr" loading="lazy" src="${SPRITE}${x}.png" alt="" onerror="this.style.visibility='hidden'"><span>No.${x}</span><b>${o?esc(nameOf(x)):"???"}</b></div>`;}
+      setHTML(R.grid,html);
+    }
+  };
+}
+
+function StudentRep(){
+  let R,drag=null;
+  return{
+    mount(m){
+      const el=h(`<div>${pageHead("대표 포켓몬 설정")}
+        <div class="tgrid"><section class="win"><h2>친구들에게 보이는 모습</h2><div class="repbig" data-r="card"></div>
+          <p class="hint mt">꾸미기를 손가락이나 마우스로 끌어서 원하는 곳에 놓아 보세요. 놓으면 바로 저장돼요.</p>
+          <div class="sizes" data-r="sizes"></div>
+          <button class="btn small mt" data-act="decoReset">위치와 크기 처음대로</button></section>
+          <div><section class="win"><h2>대표 포켓몬 고르기</h2><div class="mons" data-r="mons"></div></section>
+            <section class="win mt"><h2>꾸미기</h2><div data-r="deco"></div></section></div></div></div>`);
+      m.append(el);R=refs(el);
+      R.card.addEventListener("pointerdown",e=>{const a=e.target.closest(".acc");if(!a)return;e.preventDefault();
+        drag={a,slot:a.dataset.slot,rect:a.parentElement.getBoundingClientRect()};a.classList.add("dragging");a.setPointerCapture(e.pointerId);});
+      R.card.addEventListener("pointermove",e=>{if(!drag)return;const r=drag.rect;
+        drag.x=Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100));drag.y=Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100));
+        drag.a.style.left=drag.x+"%";drag.a.style.top=drag.y+"%";});
+      const end=()=>{if(!drag)return;const d=drag;drag=null;d.a.classList.remove("dragging");
+        if(d.x!=null)Store.set(`rooms/${S.code}/students/${S.sid}/deco/pos/${d.slot}`,{x:Math.round(d.x*10)/10,y:Math.round(d.y*10)/10});};
+      R.card.addEventListener("pointerup",end);R.card.addEventListener("pointercancel",end);
+    },
+    update(){
+      const st=D().students[S.sid],rep=repOf(st),mons=arr(st.mons),d=st.deco||{},have=st.decos||{};
+      if(!drag)setHTML(R.card,repCard(st));
+      const sz=d.size||{};
+      setHTML(R.sizes,["head","face","hold","aura"].filter(k=>d[k]&&DECOS[d[k]]).map(k=>{const v=sz[k]||1;
+        return `<div class="szrow"><span class="szname">${DECOS[d[k]][1]} ${esc(DECOS[d[k]][0])}</span>
+          <button class="btn small" data-act="decoSize" data-slot="${k}" data-d="-1" ${v<=0.5?"disabled":""} aria-label="${esc(DECOS[d[k]][0])} 작게">작게</button>
+          <b>${Math.round(v*100)}%</b>
+          <button class="btn small" data-act="decoSize" data-slot="${k}" data-d="1" ${v>=2.5?"disabled":""} aria-label="${esc(DECOS[d[k]][0])} 크게">크게</button></div>`;}).join(""));
+      setHTML(R.mons,mons.length?mons.map(id=>`<button class="mon${rep===id?" pick":""}" data-act="setRep" data-id="${id}">${spr(id,false)}<span class="n">${esc(nameOf(id))}</span>${rep===id?'<span class="tag">대표</span>':""}</button>`).join("")
+        :'<p class="hint">아직 포켓몬이 없어요.</p>');
+      const ownedDecos=Object.keys(have).filter(k=>DECOS[k]||BGS[k]);
+      if(!ownedDecos.length){setHTML(R.deco,'<p class="hint">아직 꾸미기가 없어요. 내 아이템에서 꾸미기 상자를 열면 얻을 수 있어요.</p>');return;}
+      setHTML(R.deco,Object.entries(SLOTS).map(([slot,label])=>{
+        const list=slot==="bg"?Object.keys(BGS).filter(k=>have[k]):Object.keys(DECOS).filter(k=>have[k]&&DECOS[k][2]===slot);
+        if(!list.length)return "";
+        return `<div class="slotrow"><p class="lbl">${label}</p><div class="chips2">
+          <button data-act="equip" data-slot="${slot}" data-id="" aria-pressed="${!d[slot]}">없음</button>
+          ${list.map(k=>`<button data-act="equip" data-slot="${slot}" data-id="${k}" aria-pressed="${d[slot]===k}">${slot==="bg"?"🖼️":DECOS[k][1]} ${esc(slot==="bg"?BGS[k].n:DECOS[k][0])}</button>`).join("")}</div></div>`;
+      }).join(""));
+    }
+  };
+}
+
+const CATS=["배려","의사소통","예의","지식","협력","책임","도전","감사"];
+function StudentGrowth(){
+  let R;
+  return{
+    mount(m){
+      const el=h(`<div>${pageHead("오늘의 성장")}
+        <section class="win"><h2>오늘 학교에서 어떤 점이 성장했나요?</h2>
+          <div class="chips2" data-r="cats">${CATS.map(c=>`<button data-act="gcat" data-c="${c}" aria-pressed="${S.gcat===c}">${c}</button>`).join("")}</div>
+          <label class="lbl" for="gtext">내가 한 일</label>
+          <textarea id="gtext" maxlength="200" placeholder="예: 친구가 넘어졌을 때 일으켜 주고 보건실에 같이 갔어요."></textarea>
+          <p class="hint" data-r="left"></p>
+          <button class="btn blue big" data-act="gsend">선생님께 보내기</button></section>
+        <section class="win mt"><h2>내가 쓴 글</h2><div data-r="list"></div></section></div>`);
+      m.append(el);R=refs(el);
+      const ta=$("#gtext");ta.value=S.gdraft||"";ta.addEventListener("input",()=>{S.gdraft=ta.value;});
+    },
+    update(){
+      const {room}=D();
+      const mine=Object.entries(room.growth||{}).filter(([,g])=>g&&g.sid===S.sid).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
+      const n=mine.filter(([,g])=>g.date===today()).length;
+      R.left.textContent=`하루에 3번까지 쓸 수 있어요. 오늘 ${n}번 썼어요.`;
+      const st={pending:"선생님 확인 중",approved:"승인됨",returned:"돌려받음"};
+      setHTML(R.list,mine.length?mine.map(([,g])=>{
+        const rw=g.reward||{},got=["atk","deco","evo"].filter(k=>rw[k]).map(k=>`${ITEMS[k].e} ${ITEMS[k].n} ${rw[k]}개`).join(", ");
+        return `<div class="gcard"><div class="gmeta"><span class="tag2">${esc(g.cat)}</span> <span class="hint">${esc(g.date)}</span> <span class="st ${g.status}">${st[g.status]||""}</span></div>
+          <p class="gtext">${esc(g.text)}</p>${g.status==="approved"&&got?`<p class="good">받은 아이템: ${got}</p>`:""}
+          ${g.status==="returned"?'<p class="hint">선생님이 돌려보냈어요. 조금 더 자세히 다시 써 볼까요?</p>':""}</div>`;
+      }).join(""):'<p class="hint">아직 쓴 글이 없어요.</p>');
+    }
+  };
+}
+
+function StudentItems(){
+  let R;
+  return{
+    mount(m){
+      const el=h(`<div>${pageHead("내 아이템")}<section class="win"><div class="icards">${Object.entries(ITEMS).map(([k,it])=>`
+        <div class="icard"><div class="ie">${it.e}</div><b>${it.n}</b><div class="cnt2" data-r="n_${k}"></div><p class="hint">${it.d}</p>
+        <button class="btn blue" data-act="useItem" data-k="${k}" data-r="u_${k}">${k==="deco"?"열기":"사용하기"}</button></div>`).join("")}</div>
+        <p class="hint mt">아이템은 선생님이 오늘의 성장 글을 승인할 때 줄 수 있어요.</p></section></div>`);
+      m.append(el);R=refs(el);
+    },
+    update(){
+      const it=D().students[S.sid].items||{};
+      for(const k of Object.keys(ITEMS)){R["n_"+k].textContent=`${it[k]||0}개`;R["u_"+k].disabled=!(it[k]>0);}
+    }
+  };
+}
+const PAGES={hub:StudentHub,mons:StudentMons,dex:StudentDex,rep:StudentRep,growth:StudentGrowth,items:StudentItems};
+
+/* 아이템 사용 */
+function openModal(html){modal.innerHTML=`<div class="win grant">${html}</div>`;modal.hidden=false;}
+function openUse(k){
+  const st=D().students[S.sid],mons=arr(st.mons),n=(st.items||{})[k]||0;
+  if(n<1)return;
+  if(k==="deco")return openDeco();
+  if(!mons.length)return toast("아직 포켓몬이 없어요.");
+  if(k==="evo"&&!GD.ready)return toast(GD.failed?"진화 정보를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.":"진화 정보를 불러오는 중이에요. 잠시 뒤 다시 눌러 주세요.");
+  openModal(`<h2>${ITEMS[k].e} ${esc(josa(ITEMS[k].n,"을","를"))} 누구에게 쓸까요?</h2><div class="mons mt">${mons.map(id=>{
+    const kids=k==="evo"?(GD.children[id]||[]):[1],dis=!kids.length;
+    return `<button class="mon${dis?" used":""}" ${dis?"disabled":""} data-act="useOn" data-k="${k}" data-id="${id}">${spr(id,false)}<span class="n">${esc(nameOf(id))}</span>
+      <span class="hint">${k==="atk"?`공격력 ${powText(power(st,id))}`:dis?"최종 진화":"진화 가능"}</span></button>`;}).join("")}</div>
+    <button class="btn big" data-act="closeModal">닫기</button>`);
+}
+async function useAtk(id){
+  const st=D().students[S.sid],n=(st.items||{}).atk||0;if(n<1)return;
+  const before=power(st,id),bonus=before.bonus+30;
+  await Store.update(`rooms/${S.code}/students/${S.sid}`,{"items/atk":n-1,[`boosts/p${id}`]:bonus});
+  Snd.sfx("hit");
+  openModal(`<div class="center"><div class="evobox">${spr(id,false)}</div><h2>${esc(nameOf(id))}의 공격력이 30 올랐어요!</h2>
+    <p>${before.total?`${before.total} → ${before.total+30}`:`보너스 +${bonus}`}</p><button class="btn blue big" data-act="closeModal">좋아요!</button></div>`);
+}
+function chooseEvo(id){
+  const st=D().students[S.sid],kids=(GD.children[id]||[]).slice().sort((a,b)=>a-b);
+  if(!kids.length)return toast("최종 진화한 포켓몬이에요.");
+  if(kids.length===1)return evolve(id,kids[0]);
+  const have=arr(st.mons);
+  openModal(`<h2>${esc(josa(nameOf(id),"은","는"))} 여러 모습으로 진화할 수 있어요. 무엇으로 진화할까요?</h2><div class="mons mt">${kids.map(k=>`
+    <button class="mon${have.includes(k)?" used":""}" ${have.includes(k)?"disabled":""} data-act="evoTo" data-from="${id}" data-to="${k}">${spr(k,false)}<span class="n">${esc(nameOf(k))}</span>${have.includes(k)?'<span class="hint">이미 있어요</span>':""}</button>`).join("")}</div>
+    <button class="btn big" data-act="closeModal">닫기</button>`);
+}
+async function evolve(from,to){
+  const st=D().students[S.sid],n=(st.items||{}).evo||0;if(n<1)return;
+  const mons=arr(st.mons);
+  if(mons.includes(to))return toast(`이미 ${josa(nameOf(to),"을","를")} 가지고 있어서 진화할 수 없어요.`);
+  if(!confirm(`${josa(nameOf(from),"을","를")} ${josaRo(nameOf(to))} 진화시킬까요?`))return;
+  const boosts=Object.assign({},st.boosts||{});const b=boosts["p"+from]||0;delete boosts["p"+from];if(b)boosts["p"+to]=b;
+  const sw=x=>x===from?to:x;
+  await Store.update(`rooms/${S.code}/students/${S.sid}`,{
+    mons:mons.map(sw),used:arr(st.used).map(sw),rep:st.rep===from?to:(st.rep??null),
+    pick:st.pick&&st.pick.mon===from?{raid:st.pick.raid,mon:to}:(st.pick||null),
+    boosts:Object.keys(boosts).length?boosts:null,"items/evo":n-1,[`dex/p${from}`]:true,[`dex/p${to}`]:true});
+  openModal(`<div class="center"><h2>어라…?</h2><div class="evobox evoing">${spr(from,false).replace('class="spr"','class="spr e1"')}${spr(to,false).replace('class="spr"','class="spr e2"')}</div>
+    <p id="evomsg">${esc(nameOf(from))}의 모습이…!</p><div id="evobtn"></div></div>`);
+  Snd.cry(from);
+  setTimeout(()=>{const m=$("#evomsg");if(!m)return;
+    m.textContent=`축하해요! ${josa(nameOf(from),"이","가")} ${josaRo(nameOf(to))} 진화했어요!`;
+    $("#evobtn").innerHTML='<button class="btn blue big" data-act="closeModal">좋아요!</button>';
+    Snd.once("win");setTimeout(()=>Snd.cry(to),900);},2600);
+}
+async function openDeco(){
+  const st=D().students[S.sid],n=(st.items||{}).deco||0;if(n<1)return;
+  const have=st.decos||{};
+  const accs=Object.keys(DECOS).filter(k=>!have[k]),bgs=Object.keys(BGS).filter(k=>!have[k]);
+  if(!accs.length&&!bgs.length)return toast("모든 꾸미기를 다 모았어요! 상자는 그대로 남겨 둘게요.");
+  const isBg=bgs.length&&(!accs.length||Math.random()<0.05);
+  const pool=isBg?bgs:accs,got=pool[rnd(0,pool.length-1)];
+  await Store.update(`rooms/${S.code}/students/${S.sid}`,{"items/deco":n-1,[`decos/${got}`]:true});
+  const slot=isBg?"bg":DECOS[got][2];
+  const preview=isBg?`<div class="rcard reveal-bg" style="background:${BGS[got].g}"><div class="band" style="background:${BGS[got].c}">${BGS[got].b}</div></div>`
+    :`<div class="reveal">${DECOS[got][1]}</div>`;
+  Snd.once("win");
+  openModal(`<div class="center"><h2>${isBg?"✨ 아주 드문 배경이 나왔어요! ✨":"꾸미기 상자를 열었어요!"}</h2>${preview}
+    <p class="big2">${esc(isBg?BGS[got].n:DECOS[got][0])}</p><p class="hint">${SLOTS[slot]}에 다는 꾸미기예요.</p>
+    <button class="btn blue big" data-act="equip" data-slot="${slot}" data-id="${got}" data-close="1">대표 포켓몬에게 바로 달기</button>
+    <button class="btn big" data-act="closeModal">나중에 달기</button></div>`);
+}
+
+/* ---------------- 학생: 출전 포켓몬 고르기 ---------------- */
+function StudentPick(){
+  let R;
+  return{
+    mount(m){
+      const {meta}=D();
+      const el=h(`<div><div class="battle solo">${sceneHTML(meta.boss)}<div class="dlg"><div class="in" data-r="msg"></div></div></div>
+        <section class="win mt" style="max-width:680px;margin-left:auto;margin-right:auto"><h2>출전할 포켓몬을 골라 주세요</h2>
+          <p class="hint" data-r="note"></p><div class="mons mt" data-r="grid"></div></section></div>`);
+      m.append(el);R=refs(el);R.foe.classList.add("appear");setTimeout(()=>Snd.cry(meta.boss),500);
+      R.msg.textContent=`야생의 ${josa(nameOf(meta.boss),"이","가")} 나타났다!`;
+    },
+    update(){
+      const {students}=D();const me=students[S.sid];updateFoe(R);
+      R.note.textContent=allUsed(me)?"모든 포켓몬을 한 번씩 썼어요. 이제 다시 모두 쓸 수 있어요.":"한 번 쓴 포켓몬은 다른 포켓몬을 모두 한 번씩 쓸 때까지 쉬어요.";
+      setHTML(R.grid,monGrid(me,"pickMon",null));
+    }
+  };
+}
+
+/* ---------------- 학생: 배틀 ---------------- */
+function StudentBattle(){
+  let R,ans="",animating=false,shown=null,onKey;
+  const padHTML=unit=>`<div class="answer"><div class="ansbox" data-r2="ans" aria-live="polite"></div><span class="unit">${esc(unit)}</span></div>
+    <div class="keys">${["7","8","9","del","4","5","6",".","1","2","3","0"].map(k=>`<button data-act="key" data-k="${k}" aria-label="${k==="del"?"지우기":k}">${k==="del"?"⌫":k}</button>`).join("")}
+    <button class="atk" data-act="key" data-k="ok">공격!</button></div>`;
+  function waitText(){return D().hp===0?"전설의 포켓몬이 지쳐 쓰러지기 직전이에요! 선생님이 레이드를 끝낼 때까지 기다려요.":"친구들의 공격을 기다리는 중…";}
+  function showDone(att){
+    shown=att.status;R.pad.innerHTML="";const mon=esc(nameOf(att.mon));
+    if(att.status==="hit")R.msg.innerHTML=att.crit?`<p class="q"><b class="crit">크리티컬!</b> ${mon}의 공격이 급소에 맞았다! <b class="good">두 번 명중!</b></p>`:`<p class="q">${mon}의 공격! <b class="good">명중했다!</b></p><p class="sub" id="waitline">${waitText()}</p>`;
+    else{R.me.classList.add("fainted");
+      R.msg.innerHTML=`<p class="q">${mon}의 공격은 <b class="bad">빗나갔다!</b></p><p class="sub">정답: ${fmt(att.ans)} ${esc(att.unit)}${att.given?` (내 답: ${esc(att.given)})`:""}</p><p class="sub">다음 레이드에서 다시 도전해요.</p>`;}
+  }
+  return{
+    mount(m){
+      const {meta,atts,students}=D();const att=atts[S.sid],me=students[S.sid];
+      const el=h(`<div class="battle solo">${sceneHTML(meta.boss,att.mon)}<div class="dlg"><div class="in"><div data-r="msg"></div><div data-r="pad"></div></div></div></div>`);
+      m.append(el);R=refs(el);
+      R.mebox.hidden=false;R.mename.textContent=nameOf(att.mon);R.menum.textContent=`${me.num}번 ${me.name}`;
+      if(att.status==="pending"){R.msg.innerHTML=`<p class="q">${esc(att.text)}</p>`;R.pad.innerHTML=padHTML(att.unit);setTimeout(()=>Snd.cry(att.mon),300);}
+      else showDone(att);
+      onKey=e=>{if(shown||animating)return;
+        if(/^[0-9.]$/.test(e.key))this.key(e.key);else if(e.key==="Backspace")this.key("del");else if(e.key==="Enter")this.key("ok");else return;
+        e.preventDefault();};
+      document.addEventListener("keydown",onKey);
+    },
+    destroy(){document.removeEventListener("keydown",onKey);},
+    update(){
+      const {atts}=D();const att=atts[S.sid];updateFoe(R);
+      if(!att||animating)return;
+      if(att.status!=="pending"&&shown!==att.status)showDone(att);
+      const w=$("#waitline");if(w)w.textContent=waitText();
+    },
+    key(k){
+      if(shown||animating)return;
+      if(k==="ok")return this.submit();
+      Snd.sfx("key");
+      if(k==="del")ans=ans.slice(0,-1);
+      else if(k==="."){if(!ans.includes("."))ans=(ans||"0")+".";}
+      else{if(ans.length>=6)return;if(ans.includes(".")&&ans.split(".")[1].length>=2)return;ans=ans==="0"?k:ans+k;}
+      const box=R.pad.querySelector(".ansbox");if(box)box.textContent=ans;
+    },
+    async submit(){
+      if(!ans||ans==="."||ans==="0.")return toast("답을 먼저 입력해 주세요.");
+      const {meta,atts,raid}=D();const att=atts[S.sid];
+      if(meta.stage!=="raid"||!att||att.status!=="pending")return;
+      const hit=Math.round(parseFloat(ans)*100)===att.ans;
+      const pw=power(D().students[S.sid],att.mon),crit=hit&&Math.random()<(pw.total||pw.bonus||0)/100000;
+      animating=true;R.pad.innerHTML="";
+      R.msg.innerHTML=`<p class="q">${esc(nameOf(att.mon))}의 공격!</p>`;
+      restart(R.me,"lunge");restart(R.foe,hit?"hurt":"dodge");setTimeout(()=>Snd.sfx(hit?"hit":"miss"),250);
+      if(crit){setTimeout(()=>{critFx(R.foe.parentElement);restart(R.me,"lunge");restart(R.foe,"hurt");},650);setTimeout(()=>Snd.sfx("hit"),900);}
+      const given=ans;
+      try{await Store.update(`rooms/${S.code}/attempts/r${raid}/${S.sid}`,{status:hit?"hit":"miss",crit,given,done:Date.now()});}
+      catch(e){animating=false;R.msg.innerHTML=`<p class="q">${esc(att.text)}</p>`;R.pad.innerHTML=padHTML(att.unit);toast("저장하지 못했어요. 다시 공격해 주세요.");return;}
+      setTimeout(()=>{animating=false;if(R.msg.isConnected)showDone({...att,status:hit?"hit":"miss",crit,given});},crit?1800:1100);
+    }
+  };
+}
+
+/* ---------------- 학생: 결과 ---------------- */
+function StudentResult(){return{mount(m){
+  Snd.once(D().meta.result==="caught"?"win":"lose");
+  const {atts,parts}=D();const a=atts[S.sid];
+  const mine=!a?(parts[S.sid]?"이번 레이드에는 공격하지 못했어요.":"이번 레이드에는 참여하지 않았어요.")
+    :a.status==="hit"?`내 ${nameOf(a.mon)}의 공격은 명중했어요!`
+    :a.status==="miss"?`내 ${nameOf(a.mon)}의 공격은 빗나갔어요.`
+    :`${nameOf(a.mon)}로 문제를 다 풀기 전에 레이드가 끝났어요.`;
+  m.append(h(`<div>${resultHTML(`<p class="mt">${esc(mine)}</p><button class="btn blue big" data-act="ack">확인</button>`)}</div>`));
+}};}
+
+/* ---------------- QR ---------------- */
+function openQR(){
+  const url=location.href.split("?")[0].split("#")[0]+"?room="+S.code;
+  modal.innerHTML=`<div class="win qrwrap"><h2>이 QR로 들어오세요</h2><div class="qrbox" id="qr"></div>
+    <div class="qrcode">${S.code}</div><p class="hint">${esc(url)}</p>
+    ${location.protocol==="file:"?'<p class="hint">지금은 내 컴퓨터의 파일로 열려 있어서 다른 기기에서는 QR이 열리지 않아요.</p>':""}
+    <button class="btn big" data-act="closeModal">닫기</button></div>`;
+  modal.hidden=false;
+  if(window.QRCode)new QRCode($("#qr"),{text:url,width:256,height:256});else $("#qr").textContent=url;
+}
+
+/* ---------------- 선생님: 오늘의 성장 확인 ---------------- */
+function TeacherGrowth(){
+  let R;
+  return{
+    mount(m){
+      const el=h(`<div><div class="phead"><button class="btn small" data-act="tPage" data-p="">← 레이드 화면으로</button><h2>오늘의 성장 확인</h2></div>
+        <section class="win"><h2>확인할 글 <span data-r="pc"></span></h2><p class="hint">아이템 수를 정한 뒤 승인하면 학생에게 바로 들어가요. 아이템 없이 승인만 할 수도 있어요.</p><div class="mt" data-r="pend"></div></section>
+        <section class="win mt"><h2>지난 글</h2><div data-r="done"></div></section></div>`);
+      m.append(el);R=refs(el);
+    },
+    update(){
+      const {room}=D();const all=Object.entries(room.growth||{}).filter(([,g])=>g);
+      const pend=all.filter(([,g])=>g.status==="pending").sort((a,b)=>(a[1].at||0)-(b[1].at||0));
+      const done=all.filter(([,g])=>g.status!=="pending").sort((a,b)=>(b[1].decided||0)-(a[1].decided||0)).slice(0,40);
+      R.pc.textContent=`${pend.length}개`;
+      setHTML(R.pend,pend.length?pend.map(([gid,g])=>{
+        const rw=T.rw[gid]||(T.rw[gid]={atk:0,deco:0,evo:0}),tot=rw.atk+rw.deco+rw.evo;
+        return `<div class="gcard"><div class="gmeta"><b>${g.num}번 ${esc(g.name)}</b> <span class="tag2">${esc(g.cat)}</span> <span class="hint">${esc(g.date)}</span></div>
+          <p class="gtext">${esc(g.text)}</p>
+          <div class="rw">${Object.entries(ITEMS).map(([k,it])=>`<span class="rwi">${it.e} ${it.n}
+            <button class="btn small" data-act="rw" data-g="${gid}" data-k="${k}" data-d="-1" aria-label="${it.n} 줄이기">−</button><b>${rw[k]}</b>
+            <button class="btn small" data-act="rw" data-g="${gid}" data-k="${k}" data-d="1" aria-label="${it.n} 늘리기">+</button></span>`).join("")}</div>
+          <div class="gbtns"><button class="btn blue" data-act="gok" data-g="${gid}">${tot?`승인하고 아이템 ${tot}개 주기`:"승인하기"}</button>
+            <button class="btn" data-act="gno" data-g="${gid}">돌려보내기</button></div></div>`;
+      }).join(""):'<p class="hint">확인할 글이 없어요.</p>');
+      setHTML(R.done,done.length?done.map(([,g])=>{const rw=g.reward||{};
+        const got=Object.keys(ITEMS).filter(k=>rw[k]).map(k=>`${ITEMS[k].e}${rw[k]}`).join(" ");
+        return `<div class="gcard"><div class="gmeta"><b>${g.num}번 ${esc(g.name)}</b> <span class="tag2">${esc(g.cat)}</span> <span class="hint">${esc(g.date)}</span>
+          <span class="st ${g.status}">${g.status==="approved"?"승인함":"돌려보냄"}</span> ${got}</div><p class="gtext">${esc(g.text)}</p></div>`;
+      }).join(""):'<p class="hint">아직 없어요.</p>');
+    }
+  };
+}
+
+
+/* ---------------- 버튼 동작 ---------------- */
+const ACT={
+  async login(){
+    const u=await readLogin();if(!u)return;
+    const acc=await Store.get("accounts/"+u.key);
+    if(!acc)return toast("그런 계정이 없어요. 처음이면 '계정 만들기'를 눌러 주세요.");
+    if(acc.pw!==u.pw)return toast("비밀번호가 맞지 않아요. 잊어버렸으면 선생님께 말씀드려요.");
+    afterLogin(u);
+  },
+  async signup(){
+    const u=await readLogin();if(!u)return;
+    if(await Store.get("accounts/"+u.key))return toast("이미 있는 계정이에요. 로그인해 주세요.");
+    if(!confirm(`${u.num}번 ${u.name} 계정을 만들까요? 비밀번호를 꼭 기억해 두세요.`))return;
+    await Store.set("accounts/"+u.key,{name:u.name,num:u.num,pw:u.pw,created:Date.now()});
+    afterLogin(u);
+  },
+  async create(){
+    const title=$("#tTitle").value.trim()||"우리 반";let code;
+    for(let i=0;i<10;i++){code=String(rnd(100000,999999));if(!(await Store.get(`rooms/${code}/meta`)))break;}
+    const pin=String(rnd(1000,9999));
+    await Store.set(`rooms/${code}`,{meta:{created:Date.now(),title,pin,stage:"setup",raidNo:0,boss:150,maxHp:10}});
+    enterRoom("teacher",code);setTimeout(openQR,400);
+  },
+  async reopen(){
+    const code=$("#rCode").value.trim(),pin=$("#rPin").value.trim();
+    const meta=await Store.get(`rooms/${code}/meta`);
+    if(!meta||meta.pin!==pin)return toast("방 코드나 비밀번호가 맞지 않아요.");
+    enterRoom("teacher",code);
+  },
+  exitRoom(){
+    const msg=S.role==="teacher"?"방은 그대로 남아요. 방 코드와 선생님 비밀번호로 다시 열 수 있어요. 나갈까요?":"방에서 나갈까요? '내 레이드 방'에서 다시 들어올 수 있어요.";
+    if(confirm(msg))exitRoom();
+  },
+  logout(){if(confirm("로그아웃할까요?"))logout();},
+  joinCode(){joinRoom($("#rc").value.trim());},
+  openRoom(b){joinRoom(b.dataset.code);},
+  qr:openQR,
+  snd(){Snd.cycle();if(S.role)renderBar();else if(S.user)lobbyBar();else homeBar();},
+  closeModal(){modal.hidden=true;modal.innerHTML="";T.grant=null;},
+  pickBoss(b){T.boss=+b.dataset.id;document.querySelectorAll(".bossgrid button").forEach(x=>x.setAttribute("aria-pressed",String(+x.dataset.id===T.boss)));cur.v.boss&&cur.v.boss();},
+  hpStep(b){T.hp=Math.min(99,Math.max(1,T.hp+(+b.dataset.d)));$("#hpIn").value=T.hp;},
+  hpAll(){const n=sorted(D().students).filter(([k,s])=>isOnline(k)&&arr(s.mons).length).length;T.hp=Math.max(1,n);$("#hpIn").value=T.hp;},
+  async startRaid(){
+    const {meta,students}=D();const parts={};
+    sorted(students).forEach(([k,s])=>{if(isOnline(k)&&arr(s.mons).length)parts[k]=true;});
+    const n=Object.keys(parts).length;
+    if(!n)return toast("접속해 있고 포켓몬이 있는 학생이 없어요.");
+    if(T.hp>n&&!confirm(`참여하는 학생은 ${n}명인데 ${T.hp}명이 맞혀야 잡을 수 있어요. 이대로 시작할까요?`))return;
+    await Store.update(`rooms/${S.code}/meta`,{stage:"raid",raidNo:(meta.raidNo||0)+1,boss:T.boss,maxHp:T.hp,participants:parts,result:null,startedAt:Date.now()});
+  },
+  async endRaid(){
+    if(!confirm("레이드를 끝낼까요? 모든 화면에 결과가 나와요."))return;
+    const {meta,hits}=D();const result=hits>=meta.maxHp?"caught":"fled";
+    await Store.update("rooms/"+S.code,{"meta/stage":"result","meta/result":result,
+      [`history/r${meta.raidNo}`]:{boss:meta.boss,maxHp:meta.maxHp,hits,result,at:Date.now()}});
+  },
+  async nextRaid(){await Store.update(`rooms/${S.code}/meta`,{stage:"setup",result:null});},
+  async delStudent(b){
+    const k=b.dataset.sid,st=D().students[k];
+    if(!st||!confirm(`${st.num}번 ${st.name} 학생을 이 방에서 뺄까요? 받은 포켓몬도 함께 사라져요.`))return;
+    await Store.update("rooms/"+S.code,{[`students/${k}`]:null,[`online/${k}`]:null});
+    await Store.set(`accounts/${k}/rooms/${S.code}`,null);T.sel.delete(k);
+  },
+  async resetPw(b){
+    const k=b.dataset.sid,st=D().students[k];
+    if(!st||!confirm(`${st.num}번 ${st.name}의 비밀번호를 1234로 바꿀까요?`))return;
+    if(!(await Store.get("accounts/"+k)))return toast("계정을 찾을 수 없어요.");
+    await Store.set(`accounts/${k}/pw`,await hashPw(k,"1234"));
+    toast(`${st.name}의 비밀번호를 1234로 바꿨어요.`);
+  },
+  grantSel(){openGrant([...T.sel]);},
+  grantOne(b){openGrant([b.dataset.sid]);},
+  async grantAdd(b){
+    const id=+b.dataset.id,{students}=D();const upd={};let n=0;
+    for(const k of T.grant.sids){const st=students[k];if(!st)continue;const mons=arr(st.mons);
+      if(!mons.includes(id)){upd[`students/${k}/mons`]=[...mons,id];upd[`students/${k}/dex/p${id}`]=true;n++;}}
+    if(!n)return toast("이미 가지고 있어요.");
+    await Store.update("rooms/"+S.code,upd);
+    toast(`${josa(nameOf(id),"을","를")} ${n}명에게 줬어요.`);
+    const q=$("#gq");if(q){q.value="";$("#gsugg").innerHTML="";q.focus();}
+  },
+  async grantDel(b){
+    const id=+b.dataset.id,k=T.grant.sids[0],st=D().students[k];if(!st)return;
+    await Store.update(`rooms/${S.code}/students/${k}`,{mons:arr(st.mons).filter(x=>x!==id),
+      used:arr(st.used).filter(x=>x!==id),pick:st.pick&&st.pick.mon===id?null:(st.pick||null)});
+  },
+  prePick(b){Store.set(`rooms/${S.code}/students/${S.sid}/pick`,{raid:(D().meta.raidNo||0)+1,mon:+b.dataset.id});},
+  pickMon(b){createAttempt(+b.dataset.id);},
+  key(b){cur.v.key&&cur.v.key(b.dataset.k);},
+  page(b){S.page=b.dataset.p;render();window.scrollTo(0,0);},
+  tPage(b){T.page=b.dataset.p||null;render();window.scrollTo(0,0);},
+  ack(){S.ack=D().raid;S.page="hub";render();},
+  decoReset(){Store.update(`rooms/${S.code}/students/${S.sid}/deco`,{pos:null,size:null});toast("꾸미기 위치와 크기를 처음대로 돌렸어요.");},
+  decoSize(b){const d=D().students[S.sid].deco||{},k=b.dataset.slot,v=((d.size||{})[k])||1;
+    const nv=Math.round(Math.max(0.5,Math.min(2.5,v+(+b.dataset.d)*0.1))*10)/10;
+    Store.set(`rooms/${S.code}/students/${S.sid}/deco/size/${k}`,nv===1?null:nv);},
+  dexGen(b){S.dexGen=+b.dataset.i;cur.v.update();},
+  setRep(b){Store.set(`rooms/${S.code}/students/${S.sid}/rep`,+b.dataset.id);},
+  async equip(b){
+    await Store.set(`rooms/${S.code}/students/${S.sid}/deco/${b.dataset.slot}`,b.dataset.id||null);
+    if(b.dataset.close){ACT.closeModal();toast("대표 포켓몬에게 달았어요!");}
+  },
+  gcat(b){S.gcat=b.dataset.c;document.querySelectorAll('[data-act="gcat"]').forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.c===S.gcat)));},
+  async gsend(){
+    const text=($("#gtext").value||"").trim(),{room,students}=D(),st=students[S.sid];
+    if(!S.gcat)return toast("어떤 점이 성장했는지 먼저 골라 주세요.");
+    if(text.length<5)return toast("조금 더 자세히 써 주세요.");
+    const n=Object.values(room.growth||{}).filter(g=>g&&g.sid===S.sid&&g.date===today()).length;
+    if(n>=3)return toast("오늘은 3번 모두 썼어요. 내일 또 써 주세요!");
+    const gid=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    await Store.set(`rooms/${S.code}/growth/${gid}`,{sid:S.sid,name:st.name,num:st.num,cat:S.gcat,text,date:today(),at:Date.now(),status:"pending"});
+    S.gdraft="";S.gcat=null;$("#gtext").value="";
+    document.querySelectorAll('[data-act="gcat"]').forEach(x=>x.setAttribute("aria-pressed","false"));
+    toast("선생님께 보냈어요!");
+  },
+  useItem(b){openUse(b.dataset.k);},
+  useOn(b){const id=+b.dataset.id;if(b.dataset.k==="atk"){if(confirm(`${nameOf(id)}에게 파워 사탕을 줄까요?`))useAtk(id);}else chooseEvo(id);},
+  evoTo(b){evolve(+b.dataset.from,+b.dataset.to);},
+  rw(b){const r=T.rw[b.dataset.g];if(!r)return;r[b.dataset.k]=Math.max(0,Math.min(5,r[b.dataset.k]+(+b.dataset.d)));cur.v.update();},
+  async gok(b){
+    const gid=b.dataset.g,{room,students}=D(),g=(room.growth||{})[gid];if(!g)return;
+    const rw=T.rw[gid]||{atk:0,deco:0,evo:0},st=students[g.sid],it=(st&&st.items)||{};
+    const upd={[`growth/${gid}/status`]:"approved",[`growth/${gid}/reward`]:rw,[`growth/${gid}/decided`]:Date.now()};
+    if(st)for(const k of Object.keys(ITEMS))if(rw[k])upd[`students/${g.sid}/items/${k}`]=(it[k]||0)+rw[k];
+    await Store.update("rooms/"+S.code,upd);delete T.rw[gid];
+    toast(`${g.name}의 글을 승인했어요.`);
+  },
+  async gno(b){
+    const gid=b.dataset.g,g=(D().room.growth||{})[gid];if(!g)return;
+    if(!confirm(`${g.name}의 글을 돌려보낼까요? 학생이 다시 쓸 수 있어요.`))return;
+    await Store.update(`rooms/${S.code}/growth/${gid}`,{status:"returned",decided:Date.now()});
+  }
+};
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");if(!b||b.disabled)return;
+  const f=ACT[b.dataset.act];if(f){e.preventDefault();if(b.dataset.act!=="key")Snd.sfx("blip");f(b);}
+});
+addEventListener("unhandledrejection",e=>{
+  const m=String(e.reason&&e.reason.message||e.reason||"");
+  toast(/permission/i.test(m)?"서버가 접속을 막고 있어요. Firebase의 규칙 설정을 확인해 주세요.":"서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.");
+});
+modal.addEventListener("click",e=>{if(e.target===modal)ACT.closeModal();});
+
+/* ---------------- 시작 ---------------- */
+(async function boot(){
+  await Store.init();loadMoreNames();loadGameData();
+  const qp=(new URLSearchParams(location.search).get("room")||"").replace(/\D/g,"").slice(0,6);
+  if(qp)history.replaceState(null,"",location.pathname);
+  const tc=sessionStorage.getItem("pkraid-teacher");
+  if(tc&&!qp&&(await Store.get(`rooms/${tc}/meta`))){enterRoom("teacher",tc);return;}
+  let u=null;try{u=JSON.parse(ls().getItem("pkraid-user"));}catch(e){}
+  if(u){
+    const acc=await Store.get("accounts/"+u.key);
+    if(acc&&acc.pw===u.pw){
+      S.user=u;
+      if(qp&&(await joinRoom(qp)))return;
+      const last=ls().getItem("pkraid-lastroom");
+      if(last&&(await Store.get(`rooms/${last}/students/${u.key}`))){enterRoom("student",last);return;}
+      show("lobby",StudentLobby);return;
+    }
+    ls().removeItem("pkraid-user");
+  }
+  S.pending=qp||null;show("home",HomeView);
+})();
+</script>
+</body></html>
