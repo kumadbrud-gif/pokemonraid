@@ -272,6 +272,24 @@ textarea{font:inherit;border:3px solid var(--ink);border-radius:6px;padding:8px 
 .pxstars{position:absolute;inset:0 0 20% 0;background-image:radial-gradient(#fff 0 .7cqw,transparent .8cqw),radial-gradient(#ffe88a 0 .5cqw,transparent .6cqw);background-size:23cqw 19cqw,31cqw 27cqw;background-position:4cqw 3cqw,15cqw 11cqw;opacity:.85}
 .swatch{display:inline-block;width:22px;height:16px;border:2px solid var(--ink);border-radius:3px;vertical-align:middle}
 .reveal .pxi{animation:pop .6s steps(6)}
+.mixed{display:inline-flex;align-items:center;gap:2px;vertical-align:middle;margin:0 2px}
+.fr{display:inline-flex;flex-direction:column;align-items:center;font-size:.78em;line-height:1.1}
+.fr span:first-child{border-bottom:2px solid currentColor;padding:0 3px}
+.fr span:last-child{padding:0 3px}
+.fracin{display:flex;align-items:center;gap:8px}
+.fstack{display:flex;flex-direction:column;align-items:center;gap:4px}
+.fline{display:block;width:64px;height:3px;background:var(--ink)}
+.fbox{min-width:64px;height:44px;font-size:26px;border:3px solid var(--ink);border-radius:6px;background:#fffbe8;padding:0 6px}
+.fbox.w{height:60px;min-width:56px}
+.fbox.on{background:#fff3c4;border-color:#d08a00;box-shadow:0 0 0 3px #f0c030}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
+.choices button{font-size:20px;padding:10px 8px;border:3px solid var(--ink);border-radius:8px;background:#fff;box-shadow:0 3px 0 var(--ink)}
+.choices button[aria-pressed="true"]{background:#fff3c4;border-color:#d08a00}
+.lgraph{display:block;width:100%;max-width:420px;margin:8px auto 0;background:#fff;border:2px solid #ddd6c2;border-radius:6px}
+.lgraph .gt{font-size:13px;fill:#3a3a48}.lgraph .gl{font-size:11px;fill:#5a5a68}
+.lgraph .gg{stroke:#c8c2b0;stroke-width:1}.lgraph .gg2{stroke:#ece8de;stroke-width:1}.lgraph .ga{stroke:#3a3a48;stroke-width:1.5}
+.lgraph .gp{fill:none;stroke:#e8603c;stroke-width:2.5}.lgraph .gd{fill:#3a3a48}
+.units button{font-size:14px}
 /* 결과 */
 .result{text-align:center;padding:28px 18px;max-width:680px;margin:0 auto}
 .result .rspr img{width:min(60vw,288px);height:auto;aspect-ratio:1}
@@ -451,11 +469,133 @@ function makeNum(){ // 0.1 ~ 9.99, 자연수는 나오지 않게
   let v;do{v=rnd(1,99)*10;}while(v%100===0);return v;
 }
 function fmt(x){return (x/100).toFixed(2).replace(/\.?0+$/,"");}
-function makeProblem(){
+
+
+/* ---------------- 4학년 2학기 단원별 문제 ----------------
+   type: num(숫자 답, ans는 1/100 단위), frac(분수 답, ans={n,d}), choice(고르기, ans=번호) */
+const UNITS={frac:"1. 분수의 덧셈과 뺄셈",tri:"2. 삼각형",dec:"3. 소수의 덧셈과 뺄셈",quad:"4. 사각형",graph:"5. 꺾은선그래프",poly:"6. 다각형"};
+const pick=a=>a[rnd(0,a.length-1)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(0,i);[a[i],a[j]]=[a[j],a[i]];}return a;};
+const N=(v,unit)=>({type:"num",ans:Math.round(v*100),unit});
+function C(text,right,wrongs){const ch=shuffle([right,...wrongs]);return {type:"choice",text,choices:ch,ans:ch.indexOf(right),unit:""};}
+const F=(t,d)=>{const w=Math.floor(t/d),n=t%d;return n?`{{${w||""}|${n}|${d}}}`:String(w);};
+
+function genFrac(){
+  const d=rnd(3,12),prop=()=>rnd(1,d-1),mixed=()=>rnd(1,4)*d+rnd(1,d-1);
+  const T=[
+    ["+","L",(a,b)=>`우유를 어제 ${a} L, 오늘 ${b} L 마셨습니다. 이틀 동안 마신 우유는 모두 몇 L일까요?`],
+    ["+","m",(a,b)=>`빨간 리본 ${a} m와 파란 리본 ${b} m가 있습니다. 리본은 모두 몇 m일까요?`],
+    ["+","kg",(a,b)=>`밀가루 ${a} kg과 설탕 ${b} kg을 섞었습니다. 섞은 가루는 모두 몇 kg일까요?`],
+    ["+","시간",(a,b)=>`민서는 어제 ${a} 시간, 오늘 ${b} 시간 동안 책을 읽었습니다. 모두 몇 시간 읽었을까요?`],
+    ["+","km",(a,b)=>`트레이너가 오전에 ${a} km, 오후에 ${b} km를 걸었습니다. 모두 몇 km를 걸었을까요?`],
+    ["-","L",(a,b)=>`물 ${a} L 중에서 ${b} L를 마셨습니다. 남은 물은 몇 L일까요?`],
+    ["-","m",(a,b)=>`철사 ${a} m 중에서 ${b} m를 사용했습니다. 남은 철사는 몇 m일까요?`],
+    ["-","kg",(a,b)=>`감자 ${a} kg 중에서 ${b} kg으로 요리를 했습니다. 남은 감자는 몇 kg일까요?`],
+    ["-","m",(a,b)=>`빨간 끈은 ${a} m, 파란 끈은 ${b} m입니다. 빨간 끈은 파란 끈보다 몇 m 더 길까요?`],
+    ["-","시간",(a,b)=>`숙제를 ${a} 시간 하기로 했습니다. ${b} 시간 했다면 앞으로 몇 시간 더 해야 할까요?`]
+  ];
+  const [op,unit,f]=pick(T);let a,b;
+  if(op==="+"){a=Math.random()<.5?prop():mixed();b=Math.random()<.5?prop():mixed();}
+  else{const r=Math.random();
+    if(r<.25){a=rnd(2,5)*d;b=Math.random()<.5?prop():rnd(1,a/d-1)*d+rnd(1,d-1);}
+    else{do{a=Math.random()<.3?prop():mixed();b=Math.random()<.5?prop():mixed();}while(a<=b);}}
+  return {type:"frac",text:f(F(a,d),F(b,d)),ans:{n:op==="+"?a+b:a-b,d},unit};
+}
+function genTri(){
+  const g=rnd(0,6);
+  if(g===0){const x=rnd(4,16)*5;return {text:`이등변삼각형에서 크기가 같은 두 각이 각각 ${x}°입니다. 나머지 한 각은 몇 도일까요?`,...N(180-2*x,"°")};}
+  if(g===1){const t=rnd(2,16)*10;return {text:`이등변삼각형에서 길이가 같은 두 변 사이의 각이 ${t}°입니다. 나머지 두 각 중 한 각은 몇 도일까요?`,...N((180-t)/2,"°")};}
+  if(g===2){const a=rnd(4,15),b=rnd(3,14);return {text:`길이가 같은 두 변이 각각 ${a} cm이고 나머지 한 변이 ${b} cm인 이등변삼각형이 있습니다. 세 변의 길이의 합은 몇 cm일까요?`,...N(2*a+b,"cm")};}
+  if(g===3){const a=rnd(4,15),b=rnd(3,14);return {text:`세 변의 길이의 합이 ${2*a+b} cm인 이등변삼각형이 있습니다. 한 변이 ${b} cm이고 나머지 두 변의 길이가 같다면, 길이가 같은 한 변은 몇 cm일까요?`,...N(a,"cm")};}
+  if(g===4){const s=rnd(3,16);return {text:`한 변이 ${s} cm인 정삼각형이 있습니다. 세 변의 길이의 합은 몇 cm일까요?`,...N(3*s,"cm")};}
+  if(g===5){const s=rnd(3,16);return {text:`세 변의 길이의 합이 ${3*s} cm인 정삼각형이 있습니다. 한 변은 몇 cm일까요?`,...N(s,"cm")};}
+  if(g===6){const kind=rnd(0,2);let a,b,c;
+    do{a=rnd(2,14)*5;b=rnd(2,14)*5;c=180-a-b;}while(c<=0||(kind===0&&Math.max(a,b,c)>=90)||(kind===1&&a!==90&&b!==90&&c!==90)||(kind===2&&Math.max(a,b,c)<=90));
+    if(kind===1&&c!==90){a=90;b=180-90-c;}
+    const right=["예각삼각형","직각삼각형","둔각삼각형"][kind];
+    return C(`두 각의 크기가 ${a}°, ${b}°인 삼각형이 있습니다. 이 삼각형은 어떤 삼각형일까요?`,right,["예각삼각형","직각삼각형","둔각삼각형"].filter(x=>x!==right));}
+}
+function genQuad(){
+  const g=rnd(0,7),Q=["사다리꼴","평행사변형","마름모","직사각형","정사각형"];
+  if(g===0){const x=rnd(7,32)*5;return {text:`평행사변형에서 한 각이 ${x}°입니다. 이 각과 이웃한 각은 몇 도일까요?`,...N(180-x,"°")};}
+  if(g===1){const x=rnd(7,32)*5;return {text:`마름모에서 한 각이 ${x}°입니다. 이 각과 이웃한 각은 몇 도일까요?`,...N(180-x,"°")};}
+  if(g===2){const s=rnd(3,16);return {text:`한 변이 ${s} cm인 마름모가 있습니다. 네 변의 길이의 합은 몇 cm일까요?`,...N(4*s,"cm")};}
+  if(g===3){const a=rnd(4,15),b=rnd(3,14);return {text:`평행사변형의 이웃한 두 변이 ${a} cm, ${b} cm입니다. 네 변의 길이의 합은 몇 cm일까요?`,...N(2*(a+b),"cm")};}
+  if(g===4){const a=rnd(4,15),b=rnd(3,14);return {text:`네 변의 길이의 합이 ${2*(a+b)} cm인 평행사변형이 있습니다. 한 변이 ${a} cm라면 이웃한 변은 몇 cm일까요?`,...N(b,"cm")};}
+  if(g===5){let a,b,c;do{a=rnd(12,30)*5;b=rnd(8,30)*5;c=rnd(8,30)*5;}while(360-a-b-c<=20||360-a-b-c>=170);
+    return {text:`사각형의 세 각이 ${a}°, ${b}°, ${c}°입니다. 나머지 한 각은 몇 도일까요?`,...N(360-a-b-c,"°")};}
+  if(g===6){const a=rnd(2,12),b=rnd(2,12);return {text:`직선 가, 나, 다가 서로 평행하고 직선 나는 가와 다 사이에 있습니다. 가와 나 사이의 거리는 ${a} cm, 나와 다 사이의 거리는 ${b} cm입니다. 가와 다 사이의 거리는 몇 cm일까요?`,...N(a+b,"cm")};}
+  const q=pick([
+    ["평행한 변이 한 쌍이라도 있는 사각형을 무엇이라고 할까요?","사다리꼴",Q],
+    ["마주 보는 두 쌍의 변이 서로 평행한 사각형을 무엇이라고 할까요?","평행사변형",Q],
+    ["네 변의 길이가 모두 같은 사각형을 무엇이라고 할까요?","마름모",Q],
+    ["두 직선이 만나서 이루는 각이 직각일 때, 두 직선은 서로 무엇이라고 할까요?","수직",["수직","평행","수선","대각선"]],
+    ["서로 만나지 않는 두 직선을 무엇이라고 할까요?","평행선",["평행선","수선","대각선","꺾은선"]],
+    ["평행선 사이의 수선의 길이를 무엇이라고 할까요?","평행선 사이의 거리",["평행선 사이의 거리","대각선","둘레","높이 차"]]]);
+  return C(q[0],q[1],q[2].filter(x=>x!==q[1]).slice(0,3));
+}
+function makeGraph(){
+  for(;;){
+    const temp=Math.random()<.6;
+    const g=temp?{title:"하루 동안의 기온",unit:"°C",labels:["8시","9시","10시","11시","12시"],hours:[8,9,10,11,12]}
+      :{title:"강낭콩의 키",unit:"cm",labels:["월요일","화요일","수요일","목요일","금요일"]};
+    const v=[temp?rnd(8,16):rnd(2,8)];
+    for(let i=1;i<5;i++)v.push(v[i-1]+(temp?pick([-2,-1,1,2,3,4]):rnd(1,4)));
+    const lo=Math.min(...v),hi=Math.max(...v);if(hi-lo>11)continue;
+    g.values=v;g.yMin=Math.max(0,lo-1);g.yMax=hi+1;
+    const diffs=v.slice(1).map((x,i)=>x-v[i]),ad=diffs.map(Math.abs),mx=Math.max(...ad);
+    const iv=g.labels.slice(1).map((l,i)=>`${g.labels[i]}~${l}`);
+    const qs=[];
+    const i=rnd(0,4);qs.push({text:`${josa(g.title,"을","를")} 나타낸 꺾은선그래프입니다. ${g.labels[i]}${temp?"의 기온은":"의 키는"} 몇 ${g.unit}일까요?`,...N(v[i],g.unit)});
+    const j=rnd(0,3);qs.push({text:`${josa(g.title,"을","를")} 나타낸 꺾은선그래프입니다. ${g.labels[j]}부터 ${g.labels[j+1]}까지 ${temp?"기온은":"키는"} 몇 ${g.unit} ${diffs[j]>=0?(temp?"올랐을까요":"자랐을까요"):"내려갔을까요"}?`,...N(Math.abs(diffs[j]),g.unit)});
+    qs.push({text:`${josa(g.title,"을","를")} 나타낸 꺾은선그래프입니다. 가장 ${temp?"높았을":"컸을"} 때와 가장 ${temp?"낮았을":"작았을"} 때의 차는 몇 ${g.unit}일까요?`,...N(hi-lo,g.unit)});
+    if(ad.filter(x=>x===mx).length===1)qs.push(C(`${josa(g.title,"을","를")} 나타낸 꺾은선그래프입니다. ${temp?"기온의 변화가":"키가"} 가장 ${temp?"큰":"많이 자란"} 때는 언제일까요?`,iv[ad.indexOf(mx)],iv.filter((_,k)=>k!==ad.indexOf(mx))));
+    if(temp&&v.filter(x=>x===hi).length===1)qs.push({text:`${josa(g.title,"을","를")} 나타낸 꺾은선그래프입니다. 기온이 가장 높았던 때는 몇 시일까요?`,...N(g.hours[v.indexOf(hi)],"시")});
+    const p=pick(qs);p.graph={title:g.title,unit:g.unit,labels:g.labels,values:v,yMin:g.yMin,yMax:g.yMax};return p;
+  }
+}
+const PN={3:"정삼각형",4:"정사각형",5:"정오각형",6:"정육각형",7:"정칠각형",8:"정팔각형",9:"정구각형",10:"정십각형"};
+function genPoly(){
+  const g=rnd(0,5);
+  if(g===0){const n=rnd(3,10),s=rnd(2,12);return {text:`한 변이 ${s} cm인 ${PN[n]}이 있습니다. 모든 변의 길이의 합은 몇 cm일까요?`,...N(n*s,"cm")};}
+  if(g===1){const n=rnd(3,10),s=rnd(2,12);return {text:`모든 변의 길이의 합이 ${n*s} cm인 ${PN[n]}이 있습니다. 한 변은 몇 cm일까요?`,...N(s,"cm")};}
+  if(g===2){const n=pick([4,5,6]);return {text:`${PN[n].slice(1)}에 그을 수 있는 대각선은 모두 몇 개일까요?`,...N(n*(n-3)/2,"개")};}
+  if(g===3){const n=rnd(5,10);return C(`변이 ${n}개이고, 변의 길이와 각의 크기가 모두 같은 다각형의 이름은 무엇일까요?`,PN[n],shuffle(Object.values(PN).filter(x=>x!==PN[n])).slice(0,3));}
+  if(g===4){const n=rnd(3,8),s=rnd(2,9),m=rnd(3,8);return {text:`한 변이 ${s} cm인 ${PN[n]}과 한 변이 ${s} cm인 ${PN[m]}이 있습니다. 두 도형의 모든 변의 길이의 합은 몇 cm일까요?`,...N((n+m)*s,"cm")};}
+  return C(pick(["두 대각선의 길이가 같고, 서로 수직으로 만나는 사각형은 무엇일까요?"]),"정사각형",["마름모","평행사변형","사다리꼴"]);
+}
+function makeProblem(units){
+  const u=pick((units&&arr(units).length?arr(units):["dec"]).filter(k=>UNITS[k]));
+  if(u==="frac")return genFrac();
+  if(u==="tri")return genTri();
+  if(u==="quad")return genQuad();
+  if(u==="graph")return makeGraph();
+  if(u==="poly")return genPoly();
   const [op,unit,f]=TPL[rnd(0,TPL.length-1)];
   let a=makeNum(),b=makeNum();
   if(op==="-"){while(a===b)b=makeNum();if(a<b)[a,b]=[b,a];}
-  return {text:f(fmt(a),fmt(b)),ans:op==="+"?a+b:a-b,unit};
+  return {type:"num",text:f(fmt(a),fmt(b)),ans:op==="+"?a+b:a-b,unit};
+}
+// 분수 {{자연수|분자|분모}}를 위아래로 쌓은 모양으로 바꿔요
+function rich(t){return esc(t).replace(/\{\{(\d*)\|(\d+)\|(\d+)\}\}/g,(_,w,n,d)=>`<span class="mixed">${w}<span class="fr"><span>${n}</span><span>${d}</span></span></span>`);}
+function answerHTML(att){
+  const t=att.type||"num";
+  if(t==="frac")return rich(F(att.ans.n,att.ans.d))+" "+esc(att.unit);
+  if(t==="choice")return esc(arr(att.choices)[att.ans]);
+  return `${fmt(att.ans)} ${esc(att.unit)}`;
+}
+function graphSVG(g){
+  const W=340,H=210,L=40,R=12,Tp=30,B=30,vals=arr(g.values),labs=arr(g.labels),span=g.yMax-g.yMin,step=span>10?2:1;
+  const x=i=>L+(W-L-R)*(i+.5)/labs.length,y=v=>Tp+(H-Tp-B)*(1-(v-g.yMin)/span);
+  let s=`<svg class="lgraph" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(g.title)} 꺾은선그래프"><text x="${W/2}" y="16" text-anchor="middle" class="gt">${esc(g.title)}</text>`;
+  s+=`<text x="6" y="${Tp-8}" class="gl">(${esc(g.unit)})</text>`;
+  for(let v=g.yMin;v<=g.yMax;v++){const yy=y(v);s+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" class="${(v-g.yMin)%step===0?"gg":"gg2"}"/>`;
+    if((v-g.yMin)%step===0)s+=`<text x="${L-6}" y="${yy+4}" text-anchor="end" class="gl">${v}</text>`;}
+  labs.forEach((l,i)=>{s+=`<line x1="${x(i)}" x2="${x(i)}" y1="${Tp}" y2="${H-B}" class="gg2"/><text x="${x(i)}" y="${H-B+18}" text-anchor="middle" class="gl">${esc(l)}</text>`;});
+  s+=`<line x1="${L}" x2="${L}" y1="${Tp}" y2="${H-B}" class="ga"/><line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" class="ga"/>`;
+  s+=`<polyline points="${vals.map((v,i)=>`${x(i)},${y(v)}`).join(" ")}" class="gp"/>`;
+  vals.forEach((v,i)=>{s+=`<circle cx="${x(i)}" cy="${y(v)}" r="4" class="gd"/>`;});
+  return s+"</svg>";
 }
 
 
@@ -575,7 +715,7 @@ function homeBar(){setHTML(bar,`<span class="sp"></span>${sndBtn()}`);}
 
 /* ---------------- 상태와 화면 전환 ---------------- */
 const S={role:null,code:null,sid:null,room:null,unsub:null,user:null,creating:null,pending:null,page:"hub",ack:null,gcat:null,gdraft:"",dexGen:0};
-const T={boss:null,hp:null,seen:null,queue:[],playing:false,sel:new Set(),grant:null,page:null,rw:{}};
+const T={boss:null,hp:null,seen:null,queue:[],playing:false,sel:new Set(),grant:null,page:null,rw:{},units:null};
 const main=$("#main"),bar=$("#bar"),modal=$("#modal");
 let cur={key:null,v:null};
 function show(key,make){
@@ -631,7 +771,7 @@ function exitRoom(){
   S.unsub&&S.unsub();S.unsub=null;stopPresence();
   if(S.role==="teacher")sessionStorage.removeItem("pkraid-teacher");else if(S.role)ls().removeItem("pkraid-lastroom");
   Object.assign(S,{role:null,code:null,sid:null,room:null,creating:null,page:"hub",ack:null});
-  Object.assign(T,{boss:null,hp:null,seen:null,queue:[],playing:false,sel:new Set(),grant:null,page:null,rw:{}});
+  Object.assign(T,{boss:null,hp:null,seen:null,queue:[],playing:false,sel:new Set(),grant:null,page:null,rw:{},units:null});
   modal.hidden=true;modal.innerHTML="";
   if(S.user)show("lobby",StudentLobby);else show("home",HomeView);
 }
@@ -1259,6 +1399,7 @@ function TeacherSetup(){
       const {meta}=D();
       if(T.boss==null)T.boss=meta.boss||150;
       if(T.hp==null)T.hp=meta.maxHp||10;
+      if(T.units==null)T.units=arr(meta.units).length?arr(meta.units):["dec"];
       const el=h(`<div>
         <div class="tgrid">
           <section class="win"><h2>학생 <span data-r="cnt"></span></h2><p class="hint" data-r="hint"></p>
@@ -1268,6 +1409,8 @@ function TeacherSetup(){
           <section class="win"><h2 data-r="title"></h2>
             <div class="bp" data-r="bp"></div>
             <div class="bossgrid">${LEGENDS.map(([id,n])=>`<button data-act="pickBoss" data-id="${id}" aria-pressed="${id===T.boss}">${spr(id,false).replace("<img ",'<img loading="lazy" ')}<span>${n}</span></button>`).join("")}</div>
+            <p class="lbl">문제 단원 (4학년 2학기, 여러 개 고를 수 있어요)</p>
+            <div class="chips2 units" data-r="units"></div>
             <label class="lbl" for="hpIn">몇 명이 맞히면 잡을까요?</label>
             <p class="hint">지금 접속해 있고 포켓몬이 있는 학생만 참여해요. 한 명당 기회는 한 번이고, 크리티컬이 터지면 2번으로 세요.</p>
             <div class="stepper"><button class="btn small" data-act="hpStep" data-d="-1" aria-label="줄이기">−</button>
@@ -1300,6 +1443,7 @@ function TeacherSetup(){
       $("#selAll").checked=list.length>0&&T.sel.size===list.length;
       R.title.textContent=`${(meta.raidNo||0)+1}번째 레이드 준비`;
       R.parthint.textContent=`지금 시작하면 ${ready}명이 참여해요.`;
+      setHTML(R.units,Object.entries(UNITS).map(([k,n])=>`<button data-act="unit" data-u="${k}" aria-pressed="${T.units.includes(k)}">${n}</button>`).join(""));
       setHTML(R.list,list.map(([sid,st])=>{
         const mons=arr(st.mons),used=arr(st.used),all=allUsed(st),online=isOnline(sid);
         const pick=st.pick&&st.pick.raid===(meta.raidNo||0)+1?st.pick.mon:null;
@@ -1358,7 +1502,7 @@ function TeacherRaid(){
       T.seen=new Set(Object.entries(atts).filter(([,a])=>a&&a.status!=="pending").map(([k])=>k));
       const el=h(`<div class="tgrid">
         <div class="battle">${sceneHTML(meta.boss)}<div class="dlg"><div class="in" data-r="msg"></div></div></div>
-        <section class="win"><h2>${meta.raidNo}번째 레이드 (참여 ${Object.keys(parts).length}명)</h2><div class="tally" data-r="tally"></div>
+        <section class="win"><h2>${meta.raidNo}번째 레이드 (참여 ${Object.keys(parts).length}명)</h2><p class="hint">${arr(meta.units).length?arr(meta.units).map(k=>UNITS[k]).filter(Boolean).join(", "):UNITS.dec}</p><div class="tally" data-r="tally"></div>
           <div class="chips" data-r="chips"></div><button class="btn go big" data-act="endRaid">레이드 종료</button></section>
       </div>`);
       m.append(el);R=refs(el);
@@ -1427,10 +1571,10 @@ async function createAttempt(mon){
   if(allUsed(me))used=[];
   if(used.includes(mon))return;
   S.creating=raid;used.push(mon);
-  const p=makeProblem();
+  const p=makeProblem(meta.units);
   try{
     await Store.update("rooms/"+S.code,{
-      [`attempts/r${raid}/${S.sid}`]:{mon,text:p.text,ans:p.ans,unit:p.unit,status:"pending",at:Date.now()},
+      [`attempts/r${raid}/${S.sid}`]:{mon,...p,status:"pending",at:Date.now()},
       [`students/${S.sid}/used`]:used,[`students/${S.sid}/pick`]:null});
   }catch(e){S.creating=null;toast("저장하지 못했어요. 다시 눌러 주세요.");}
 }
@@ -1718,16 +1862,32 @@ function StudentPick(){
 
 /* ---------------- 학생: 배틀 ---------------- */
 function StudentBattle(){
-  let R,ans="",animating=false,shown=null,onKey;
-  const padHTML=unit=>`<div class="answer"><div class="ansbox" data-r2="ans" aria-live="polite"></div><span class="unit">${esc(unit)}</span></div>
-    <div class="keys">${["7","8","9","del","4","5","6",".","1","2","3","0"].map(k=>`<button data-act="key" data-k="${k}" aria-label="${k==="del"?"지우기":k}">${k==="del"?"⌫":k}</button>`).join("")}
-    <button class="atk" data-act="key" data-k="ok">공격!</button></div>`;
+  let R,ans="",fv={w:"",n:"",d:""},fa="w",sel=-1,animating=false,shown=null,onKey;
+  const KEYS=k=>`<button data-act="key" data-k="${k}" aria-label="${k==="del"?"지우기":k==="next"?"다음 칸":k}">${k==="del"?"⌫":k==="next"?"→":k}</button>`;
+  function padFor(att){
+    const t=att.type||"num";
+    if(t==="choice")return `<div class="choices">${arr(att.choices).map((c,i)=>`<button data-act="key" data-k="c${i}" aria-pressed="${sel===i}">${esc(c)}</button>`).join("")}</div>
+      <div class="keys"><button class="atk" data-act="key" data-k="ok">공격!</button></div>`;
+    if(t==="frac")return `<div class="answer"><div class="fracin">
+        <button class="fbox w" data-act="key" data-k="fw" aria-label="자연수"></button>
+        <span class="fstack"><button class="fbox" data-act="key" data-k="fn" aria-label="분자"></button><span class="fline"></span><button class="fbox" data-act="key" data-k="fd" aria-label="분모"></button></span>
+      </div><span class="unit">${esc(att.unit)}</span></div><p class="hint">칸을 눌러서 고르고 숫자를 넣어요. 자연수가 없으면 왼쪽 칸은 비워 두세요.</p>
+      <div class="keys">${["7","8","9","del","4","5","6","next","1","2","3","0"].map(KEYS).join("")}<button class="atk" data-act="key" data-k="ok">공격!</button></div>`;
+    return `<div class="answer"><div class="ansbox" aria-live="polite"></div><span class="unit">${esc(att.unit)}</span></div>
+      <div class="keys">${["7","8","9","del","4","5","6",".","1","2","3","0"].map(KEYS).join("")}<button class="atk" data-act="key" data-k="ok">공격!</button></div>`;
+  }
+  function drawAns(){
+    const box=R.pad.querySelector(".ansbox");if(box)box.textContent=ans;
+    R.pad.querySelectorAll(".fbox").forEach(b=>{const f=b.dataset.k.slice(1);b.textContent=fv[f];b.classList.toggle("on",f===fa);});
+    R.pad.querySelectorAll(".choices button").forEach((b,i)=>b.setAttribute("aria-pressed",String(i===sel)));
+  }
+  function question(att){R.msg.innerHTML=`<p class="q">${rich(att.text)}</p>${att.graph?graphSVG(att.graph):""}`;R.pad.innerHTML=padFor(att);drawAns();}
   function waitText(){return D().hp===0?"전설의 포켓몬이 지쳐 쓰러지기 직전이에요! 선생님이 레이드를 끝낼 때까지 기다려요.":"친구들의 공격을 기다리는 중…";}
   function showDone(att){
     shown=att.status;R.pad.innerHTML="";const mon=esc(nameOf(att.mon));
-    if(att.status==="hit")R.msg.innerHTML=att.crit?`<p class="q"><b class="crit">크리티컬!</b> ${mon}의 공격이 급소에 맞았다! <b class="good">두 번 명중!</b></p>`:`<p class="q">${mon}의 공격! <b class="good">명중했다!</b></p><p class="sub" id="waitline">${waitText()}</p>`;
+    if(att.status==="hit")R.msg.innerHTML=(att.crit?`<p class="q"><b class="crit">크리티컬!</b> ${mon}의 공격이 급소에 맞았다! <b class="good">두 번 명중!</b></p>`:`<p class="q">${mon}의 공격! <b class="good">명중했다!</b></p>`)+`<p class="sub" id="waitline">${waitText()}</p>`;
     else{R.me.classList.add("fainted");
-      R.msg.innerHTML=`<p class="q">${mon}의 공격은 <b class="bad">빗나갔다!</b></p><p class="sub">정답: ${fmt(att.ans)} ${esc(att.unit)}${att.given?` (내 답: ${esc(att.given)})`:""}</p><p class="sub">다음 레이드에서 다시 도전해요.</p>`;}
+      R.msg.innerHTML=`<p class="q">${mon}의 공격은 <b class="bad">빗나갔다!</b></p><p class="sub">정답: ${answerHTML(att)}${att.given?` (내 답: ${rich(att.given)})`:""}</p><p class="sub">다음 레이드에서 다시 도전해요.</p>`;}
   }
   return{
     mount(m){
@@ -1735,10 +1895,11 @@ function StudentBattle(){
       const el=h(`<div class="battle solo">${sceneHTML(meta.boss,att.mon)}<div class="dlg"><div class="in"><div data-r="msg"></div><div data-r="pad"></div></div></div></div>`);
       m.append(el);R=refs(el);
       R.mebox.hidden=false;R.mename.textContent=nameOf(att.mon);R.menum.textContent=`${me.num}번 ${me.name}`;
-      if(att.status==="pending"){R.msg.innerHTML=`<p class="q">${esc(att.text)}</p>`;R.pad.innerHTML=padHTML(att.unit);setTimeout(()=>Snd.cry(att.mon),300);}
+      if(att.status==="pending"){question(att);setTimeout(()=>Snd.cry(att.mon),300);}
       else showDone(att);
       onKey=e=>{if(shown||animating)return;
-        if(/^[0-9.]$/.test(e.key))this.key(e.key);else if(e.key==="Backspace")this.key("del");else if(e.key==="Enter")this.key("ok");else return;
+        if(/^[0-9.]$/.test(e.key))this.key(e.key);else if(e.key==="Backspace")this.key("del");
+        else if(e.key==="Enter")this.key("ok");else if(e.key==="Tab"||e.key==="ArrowRight")this.key("next");else return;
         e.preventDefault();};
       document.addEventListener("keydown",onKey);
     },
@@ -1752,25 +1913,43 @@ function StudentBattle(){
     key(k){
       if(shown||animating)return;
       if(k==="ok")return this.submit();
+      const att=D().atts[S.sid];if(!att)return;const t=att.type||"num";
       Snd.sfx("key");
-      if(k==="del")ans=ans.slice(0,-1);
-      else if(k==="."){if(!ans.includes("."))ans=(ans||"0")+".";}
-      else{if(ans.length>=6)return;if(ans.includes(".")&&ans.split(".")[1].length>=2)return;ans=ans==="0"?k:ans+k;}
-      const box=R.pad.querySelector(".ansbox");if(box)box.textContent=ans;
+      if(t==="choice"){if(k[0]==="c")sel=+k.slice(1);}
+      else if(t==="frac"){
+        if(k==="fw"||k==="fn"||k==="fd")fa=k[1];
+        else if(k==="next")fa={w:"n",n:"d",d:"w"}[fa];
+        else if(k==="del")fv[fa]=fv[fa].slice(0,-1);
+        else if(/^[0-9]$/.test(k)&&fv[fa].length<3)fv[fa]=(fv[fa]==="0"?"":fv[fa])+k;
+      }else{
+        if(k==="del")ans=ans.slice(0,-1);
+        else if(k==="."){if(!ans.includes("."))ans=(ans||"0")+".";}
+        else if(/^[0-9]$/.test(k)){if(ans.length>=6)return;if(ans.includes(".")&&ans.split(".")[1].length>=2)return;ans=ans==="0"?k:ans+k;}
+      }
+      drawAns();
     },
     async submit(){
-      if(!ans||ans==="."||ans==="0.")return toast("답을 먼저 입력해 주세요.");
       const {meta,atts,raid}=D();const att=atts[S.sid];
       if(meta.stage!=="raid"||!att||att.status!=="pending")return;
-      const hit=Math.round(parseFloat(ans)*100)===att.ans;
+      const t=att.type||"num";let hit,given;
+      if(t==="choice"){if(sel<0)return toast("답을 먼저 골라 주세요.");hit=sel===att.ans;given=arr(att.choices)[sel];}
+      else if(t==="frac"){
+        const w=+(fv.w||0),n=+(fv.n||0),d=+(fv.d||0);
+        if(!fv.n&&!fv.w)return toast("답을 먼저 입력해 주세요.");
+        if(fv.n&&!d)return toast("분모를 입력해 주세요.");
+        const num=d?w*d+n:w,den=d||1;hit=num*att.ans.d===att.ans.n*den;
+        given=d&&n?`{{${fv.w}|${n}|${d}}}`:String(w);
+      }else{
+        if(!ans||ans==="."||ans==="0.")return toast("답을 먼저 입력해 주세요.");
+        hit=Math.round(parseFloat(ans)*100)===att.ans;given=ans;
+      }
       const pw=power(D().students[S.sid],att.mon),crit=hit&&Math.random()<(pw.total||pw.bonus||0)/100000;
       animating=true;R.pad.innerHTML="";
       R.msg.innerHTML=`<p class="q">${esc(nameOf(att.mon))}의 공격!</p>`;
       restart(R.me,"lunge");restart(R.foe,hit?"hurt":"dodge");setTimeout(()=>Snd.sfx(hit?"hit":"miss"),250);
       if(crit){setTimeout(()=>{critFx(R.foe.parentElement);restart(R.me,"lunge");restart(R.foe,"hurt");},650);setTimeout(()=>Snd.sfx("hit"),900);}
-      const given=ans;
       try{await Store.update(`rooms/${S.code}/attempts/r${raid}/${S.sid}`,{status:hit?"hit":"miss",crit,given,done:Date.now()});}
-      catch(e){animating=false;R.msg.innerHTML=`<p class="q">${esc(att.text)}</p>`;R.pad.innerHTML=padHTML(att.unit);toast("저장하지 못했어요. 다시 공격해 주세요.");return;}
+      catch(e){animating=false;question(att);toast("저장하지 못했어요. 다시 공격해 주세요.");return;}
       setTimeout(()=>{animating=false;if(R.msg.isConnected)showDone({...att,status:hit?"hit":"miss",crit,given});},crit?1800:1100);
     }
   };
@@ -1882,7 +2061,7 @@ const ACT={
     const n=Object.keys(parts).length;
     if(!n)return toast("접속해 있고 포켓몬이 있는 학생이 없어요.");
     if(T.hp>n&&!confirm(`참여하는 학생은 ${n}명인데 ${T.hp}명이 맞혀야 잡을 수 있어요. 이대로 시작할까요?`))return;
-    await Store.update(`rooms/${S.code}/meta`,{stage:"raid",raidNo:(meta.raidNo||0)+1,boss:T.boss,maxHp:T.hp,participants:parts,result:null,startedAt:Date.now()});
+    await Store.update(`rooms/${S.code}/meta`,{stage:"raid",raidNo:(meta.raidNo||0)+1,boss:T.boss,maxHp:T.hp,units:T.units,participants:parts,result:null,startedAt:Date.now()});
   },
   async endRaid(){
     if(!confirm("레이드를 끝낼까요? 모든 화면에 결과가 나와요."))return;
@@ -1934,6 +2113,7 @@ const ACT={
   decoSize(b){const d=D().students[S.sid].deco||{},k=b.dataset.slot,v=((d.size||{})[k])||1;
     const nv=Math.round(Math.max(0.5,Math.min(2.5,v+(+b.dataset.d)*0.1))*10)/10;
     Store.set(`rooms/${S.code}/students/${S.sid}/deco/size/${k}`,nv===1?null:nv);},
+  unit(b){const u=b.dataset.u;if(T.units.includes(u)){if(T.units.length===1)return toast("단원을 하나 이상 골라 주세요.");T.units=T.units.filter(x=>x!==u);}else T.units=[...T.units,u];cur.v.update();},
   dexGen(b){S.dexGen=+b.dataset.i;cur.v.update();},
   setRep(b){Store.set(`rooms/${S.code}/students/${S.sid}/rep`,+b.dataset.id);},
   async equip(b){
