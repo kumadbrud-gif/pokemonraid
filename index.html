@@ -124,7 +124,7 @@ main{max-width:1180px;margin:0 auto;padding:12px 14px 48px}
 button.mon:hover:not(:disabled){background:#eef6ff}
 .mon.used{background:#e8e6e0;color:#888}
 .mon.used img{filter:grayscale(1);opacity:.45}
-.mon.used::after{content:"쉬는 중";position:absolute;top:4px;right:4px;font-size:11px;background:#888;color:#fff;padding:0 5px;border-radius:4px}
+
 .mon.pick{background:#fff3c4;border-color:#d08a00;box-shadow:0 0 0 3px #f0c030}
 .mon .tag{position:absolute;top:4px;left:4px;font-size:11px;background:#d08a00;color:#fff;padding:0 5px;border-radius:4px}
 .mon .del{position:absolute;top:2px;right:4px;border:0;background:none;font-size:20px;line-height:1;color:#a33}
@@ -317,6 +317,18 @@ textarea{font:inherit;border:3px solid var(--ink);border-radius:6px;padding:8px 
 .gift span{font-size:13px;color:#77705e}
 .gift.shiny{background:linear-gradient(135deg,#fff8d0,#ffe0f0,#d8f0ff);border-color:#d08a00;box-shadow:0 0 0 3px #f0c030}
 .result .mt{margin-top:14px}
+.teamrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.team{display:flex;gap:2px;flex-wrap:wrap}
+.tm{display:inline-block;border-radius:6px;border:2px solid transparent}
+.tm img{width:36px;height:36px;display:block}
+.tm.now{border-color:#d08a00;background:#fff3c4}
+.tm.out img{filter:grayscale(1);opacity:.4}
+.teamrow .score{margin:0}
+.mon .ftag{position:absolute;top:4px;right:4px;font-size:11px;background:#b03a2a;color:#fff;padding:0 5px;border-radius:4px}
+.mon.fainted2::after{display:none}
+.itemi{image-rendering:pixelated;image-rendering:crisp-edges;vertical-align:middle;object-fit:contain}
+.icard .ie{height:72px;display:flex;align-items:center;justify-content:center}
+.gift .ge{height:96px;display:flex;align-items:center;justify-content:center}
 /* 결과 */
 .result{text-align:center;padding:28px 18px;max-width:680px;margin:0 auto}
 .result .rspr img{width:min(60vw,288px);height:auto;aspect-ratio:1}
@@ -1294,7 +1306,22 @@ function pxIcon(id,px=3){const p=pxSprite(id);return `<img class="pxi" src="${p.
 const ITEMS={
   atk:{n:"파워 사탕",e:"🍬",d:"포켓몬 한 마리의 공격력이 30 올라가요."},
   deco:{n:"꾸미기 상자",e:"🎁",d:"열면 대표 포켓몬 꾸미기가 랜덤으로 나와요. 아주 가끔 배경이 나와요!"},
-  evo:{n:"진화의 마음",e:"💜",d:"포켓몬 한 마리를 진화시켜요. 최종 진화한 포켓몬에는 쓸 수 없어요."}
+  evo:{n:"진화의 마음",e:"💜",d:"포켓몬 한 마리를 진화시켜요. 최종 진화한 포켓몬에는 쓸 수 없어요."},
+  revive:{n:"기력의 덩어리",e:"🔶",d:"기절한 포켓몬 한 마리를 깨워요. 깨운 포켓몬은 다음 레이드에 나갈 수 있어요."}
+};
+const GIFTS={...ITEMS,egg:{n:"포켓몬 알",e:"🥚"}};
+/* 아이템 그림: PokeAPI의 실제 아이템 그림을 불러와요. 못 불러오면 다음 후보, 그래도 안 되면 이모지로 보여요. */
+const ITEM_IMG={atk:["rare-candy"],deco:["poke-doll","pretty-feather"],evo:["shiny-stone","moon-stone"],revive:["max-revive"],egg:["mystery-egg","lucky-egg"]};
+const ITEM_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/";
+function itemIcon(k,size=32){
+  const c=ITEM_IMG[k]||[],e=(GIFTS[k]||{}).e||"";
+  if(!c.length)return e;
+  return `<img class="itemi" src="${ITEM_BASE}${c[0]}.png" width="${size}" height="${size}" alt="${esc((GIFTS[k]||{}).n||"")}" data-k="${k}" data-i="0" onerror="itemFail(this)">`;
+}
+window.itemFail=img=>{
+  const c=ITEM_IMG[img.dataset.k]||[],i=+img.dataset.i+1;
+  if(i<c.length){img.dataset.i=i;img.src=ITEM_BASE+c[i]+".png";return;}
+  const sp=document.createElement("span");sp.textContent=(GIFTS[img.dataset.k]||{}).e||"";sp.style.fontSize=Math.round(img.width*0.8)+"px";img.replaceWith(sp);
 };
 const SLOTS={head:"머리",face:"얼굴",hold:"손",aura:"주변",bg:"배경"};
 const DECOS={
@@ -1450,7 +1477,7 @@ function TeacherSetup(){
             <p class="lbl">문제 단원 (4학년 2학기, 여러 개 고를 수 있어요)</p>
             <div class="chips2 units" data-r="units"></div>
             <label class="lbl" for="hpIn">모두 합쳐 몇 번 맞히면 잡을까요?</label>
-            <p class="hint">지금 접속해 있고 포켓몬이 있는 학생만 참여해요. 학생마다 문제를 계속 풀 수 있고, 맞힌 횟수를 모두 더해요. 크리티컬은 2번으로 세요.</p>
+            <p class="hint">지금 접속해 있고 기절하지 않은 포켓몬이 있는 학생만 참여해요. 학생마다 문제를 계속 풀 수 있고, 맞힌 횟수를 모두 더해요. 크리티컬은 2번으로 세요.</p>
             <div class="stepper"><button class="btn small" data-act="hpStep" data-d="-1" aria-label="줄이기">−</button>
               <input id="hpIn" type="number" min="1" max="99" inputmode="numeric" value="${T.hp}">
               <button class="btn small" data-act="hpStep" data-d="1" aria-label="늘리기">+</button>
@@ -1489,7 +1516,7 @@ function TeacherSetup(){
       const {meta,students,room}=D();const list=sorted(students);
       for(const k of [...T.sel])if(!students[k])T.sel.delete(k);
       const on=list.filter(([k])=>isOnline(k)).length;
-      const ready=list.filter(([k,s])=>isOnline(k)&&arr(s.mons).length).length;
+      const ready=list.filter(([k,s])=>isOnline(k)&&aliveMons(s).length).length;
       R.cnt.textContent=`${list.length}명`;
       R.hint.textContent=list.length?`지금 접속 중 ${on}명`:`학생들이 로그인한 뒤 방 코드 ${S.code}를 입력하면 여기에 나와요.`;
       R.gbtn.disabled=!T.sel.size;
@@ -1502,7 +1529,7 @@ function TeacherSetup(){
       setHTML(R.list,list.map(([sid,st])=>{
         const mons=arr(st.mons),used=arr(st.used),all=allUsed(st),online=isOnline(sid);
         const pick=st.pick&&st.pick.raid===(meta.raidNo||0)+1?st.pick.mon:null;
-        const icons=mons.map(id=>`<span class="mini${!all&&used.includes(id)?" used":""}${pick===id?" pick":""}" title="${esc(monName(st,id))}">${spr(id,false,shy(st,id))}</span>`).join("");
+        const fs=faintSet(st);const icons=mons.map(id=>`<span class="mini${fs.has(id)?" used":""}" title="${esc(monName(st,id))}${fs.has(id)?" (기절)":""}">${spr(id,false,shy(st,id))}</span>`).join("");
         return `<div class="srow"><input type="checkbox" data-sid="${sid}" ${T.sel.has(sid)?"checked":""} aria-label="${esc(st.name)} 선택">
           <span class="dot${online?" on":""}" title="${online?"접속 중":"접속 안 함"}"></span>
           <span class="who">${st.num}번 ${esc(st.name)}</span>
@@ -1596,11 +1623,12 @@ function TeacherRaid(){
       setHTML(R.chips,list.map(([sid,st])=>{
         const a=atts[sid];let cls="idle",txt="포켓몬 고르는 중";
         if(a){tot.ok+=a.ok||0;tot.ng+=a.ng||0;tot.hit+=a.hits||0;
-          if(a.fainted){cls="miss";tot.out++;txt=`${nameOf(a.mon)} 쓰러짐, 명중 ${a.hits||0}`;}
-          else{cls=a.hits?"hit":"pending";txt=`${nameOf(a.mon)} 명중 ${a.hits||0}${a.crit?` (크리 ${a.crit})`:""}`;}}
+          const fs=faintSet(st),tm=arr(a.team).length?arr(a.team):[a.mon],alive=tm.filter(x=>!fs.has(x)).length,ko=tm.length-alive;
+          if(a.fainted||!alive){cls="miss";tot.out++;txt=`${a.fainted?"하트 0":"모두 기절"}, 명중 ${a.hits||0}`;}
+          else{cls=a.hits?"hit":"pending";txt=`${nameOf(a.mon)} 차례, 명중 ${a.hits||0}${a.crit?` (크리 ${a.crit})`:""}${ko?`, 기절 ${ko}`:""}`;}}
         return `<div class="chip ${cls}"><span class="dot${isOnline(sid)?" on":""}"></span> ${st.num}번 ${esc(st.name)}<small>${esc(txt)}</small>${a?`<small class="hearts">${hearts(a)}</small>`:""}</div>`;
       }).join(""));
-      setHTML(R.tally,`<span><b>${tot.hit}</b>총 명중</span><span><b>${tot.ok}</b>맞힌 문제</span><span><b>${tot.ng}</b>틀린 문제</span><span><b>${tot.out}</b>쓰러진 친구</span>`);
+      setHTML(R.tally,`<span><b>${tot.hit}</b>총 명중</span><span><b>${tot.ok}</b>맞힌 문제</span><span><b>${tot.ng}</b>틀린 문제</span><span><b>${tot.out}</b>공격 끝난 친구</span>`);
       const ba=meta.bossAtk;
       if(ba&&T.baAnim!==ba.id){T.baAnim=ba.id;T.queue=[];
         restart(R.foe,"bossatk");const sc=R.foe.parentElement;sc.classList.remove("shake");void sc.offsetWidth;sc.classList.add("shake");
@@ -1612,7 +1640,7 @@ function TeacherRaid(){
       if(ba&&!ba.over)return;
       Object.entries(atts).forEach(([k,a])=>{const t=(a&&a.last&&a.last.at)||0;
         if(t>(T.seen[k]||0)){T.seen[k]=t;const st=students[k];
-          T.queue.push({who:st?`${st.num}번 ${st.name}`:"",name:st?st.name:"",mon:a.mon,sh:shy(st,a.mon),hit:!!a.last.hit,crit:!!a.last.crit});}});
+          const lm=a.last.mon||a.mon;T.queue.push({who:st?`${st.num}번 ${st.name}`:"",name:st?st.name:"",mon:lm,sh:shy(st,lm),hit:!!a.last.hit,crit:!!a.last.crit});}});
       if(T.queue.length>8)T.queue=T.queue.slice(-8);
       playNext(R);
     }
@@ -1674,29 +1702,21 @@ function studentRoute(){
   if(!me){toast("선생님이 이 방 명단에서 뺐어요.");exitRoom();return;}
   if(meta.stage==="raid"){
     if(atts[S.sid])return show("S-battle-"+raid,StudentBattle);
-    if(parts[S.sid]&&arr(me.mons).length){
-      const pick=me.pick;
-      if(pick&&pick.raid===raid&&available(me).includes(pick.mon))createAttempt(pick.mon);
-      return show("S-pick-"+raid,StudentPick);
-    }
+    if(parts[S.sid]&&aliveMons(me).length)return show("S-pick-"+raid,StudentPick);
   }
   if(meta.stage==="result"&&S.ack!==raid)return show("S-result-"+raid,StudentResult);
   const pg=PAGES[S.page]?S.page:"hub";
   show("S-"+pg,PAGES[pg]);
 }
 
-async function createAttempt(mon){
+async function createAttempt(team){
   const {meta,students,raid,atts}=D();
   if(meta.stage!=="raid"||atts[S.sid]||S.creating===raid)return;
-  const me=students[S.sid];let used=arr(me.used);
-  if(allUsed(me))used=[];
-  if(used.includes(mon))return;
-  S.creating=raid;used.push(mon);
-  const H=meta.hearts||3;
+  const f=faintSet(students[S.sid]);team=team.filter(x=>!f.has(x)).slice(0,6);
+  if(!team.length)return toast("출전할 포켓몬을 골라 주세요.");
+  S.creating=raid;const H=meta.hearts||3;
   try{
-    await Store.update("rooms/"+S.code,{
-      [`attempts/r${raid}/${S.sid}`]:{mon,hits:0,ok:0,ng:0,crit:0,hearts:H,maxHearts:H,cur:{...makeProblem(meta.units),k:1},at:Date.now()},
-      [`students/${S.sid}/used`]:used,[`students/${S.sid}/pick`]:null});
+    await Store.set(`rooms/${S.code}/attempts/r${raid}/${S.sid}`,{team,mon:team[0],hits:0,ok:0,ng:0,crit:0,hearts:H,maxHearts:H,cur:{...makeProblem(meta.units),k:1},at:Date.now()});
   }catch(e){S.creating=null;toast("저장하지 못했어요. 다시 눌러 주세요.");}
 }
 
@@ -1739,7 +1759,7 @@ function StudentHub(){
       const mine=Object.values(room.growth||{}).filter(g=>g&&g.sid===S.sid);
       const pend=mine.filter(g=>g.status==="pending").length,todayN=mine.filter(g=>g.date===today()).length;
       R.c4.textContent=pend?`선생님 확인 중 ${pend}개`:todayN?`오늘 ${todayN}개 썼어요`:"오늘 성장한 점을 써 봐요";
-      const it=st.items||{},tot=(it.atk||0)+(it.deco||0)+(it.evo||0)+Object.keys(st.eggs||{}).length;
+      const it=st.items||{},tot=Object.keys(ITEMS).reduce((n,k)=>n+(it[k]||0),0)+Object.keys(st.eggs||{}).length;
       R.c5.textContent=tot?`아이템 ${tot}개`:"받은 아이템이 없어요";
       R.b5.hidden=!tot;R.b5.textContent=tot;
       const list=sorted(students);
@@ -1760,15 +1780,13 @@ function StudentMons(){
     },
     update(){
       const {meta,students}=D();const st=students[S.sid];
-      const mons=arr(st.mons),used=arr(st.used),all=allUsed(st),rep=repOf(st);
-      const nextRaid=(meta.raidNo||0)+1,pick=st.pick&&st.pick.raid===nextRaid?st.pick.mon:null,canPick=meta.stage!=="raid";
+      const mons=arr(st.mons),rep=repOf(st),fs=faintSet(st);
       R.note.textContent=!mons.length?"아직 받은 포켓몬이 없어요. 선생님께 포켓몬을 받으면 여기에 나타나요."
-        :canPick?"'다음 출전'을 누르면 다음 레이드에 나갈 포켓몬을 미리 정할 수 있어요. 회색 포켓몬은 다른 포켓몬을 모두 한 번씩 쓸 때까지 쉬어요.":"";
+        :fs.size?"기절한 포켓몬은 내 아이템의 기력의 덩어리를 쓰면 다시 레이드에 나갈 수 있어요.":"레이드에서는 최대 6마리까지 함께 싸울 수 있어요.";
       setHTML(R.grid,mons.map(id=>{
-        const u=!all&&used.includes(id),p=power(st,id);
-        return `<div class="mcard${u?" used":""}${pick===id?" pick":""}">${spr(id,false,shy(st,id))}<b>${esc(monName(st,id))}</b>
-          <span class="pw">공격력 ${powText(p)}</span>${p.total?`<span class="hint">크리티컬 ${(p.total/100).toFixed(2)}%</span>`:""}<span class="hint">${rep===id?"⭐ 대표 포켓몬":u?"쉬는 중":"&nbsp;"}</span>
-          ${canPick&&!u?`<button class="btn small" data-act="prePick" data-id="${id}">${pick===id?"출전 예약됨":"다음 출전"}</button>`:""}</div>`;
+        const u=fs.has(id),p=power(st,id);
+        return `<div class="mcard${u?" used":""}">${spr(id,false,shy(st,id))}<b>${esc(monName(st,id))}</b>
+          <span class="pw">공격력 ${powText(p)}</span>${p.total?`<span class="hint">크리티컬 ${(p.total/100).toFixed(2)}%</span>`:""}<span class="hint">${rep===id?"⭐ 대표 포켓몬":"&nbsp;"}</span>${u?'<span class="bad">기절 (기력의 덩어리 필요)</span>':""}</div>`;
       }).join(""));
     }
   };
@@ -1866,7 +1884,7 @@ function StudentGrowth(){
       R.left.textContent=`하루에 3번까지 쓸 수 있어요. 오늘 ${n}번 썼어요.`;
       const st={pending:"선생님 확인 중",approved:"승인됨",returned:"돌려받음"};
       setHTML(R.list,mine.length?mine.map(([,g])=>{
-        const rw=g.reward||{},got=["atk","deco","evo"].filter(k=>rw[k]).map(k=>`${ITEMS[k].e} ${ITEMS[k].n} ${rw[k]}개`).join(", ");
+        const rw=g.reward||{},got=Object.keys(GIFTS).filter(k=>rw[k]).map(k=>`${itemIcon(k,24)} ${GIFTS[k].n} ${rw[k]}개`).join(", ");
         return `<div class="gcard"><div class="gmeta"><span class="tag2">${esc(g.cat)}</span> <span class="hint">${esc(g.date)}</span> <span class="st ${g.status}">${st[g.status]||""}</span></div>
           <p class="gtext">${esc(g.text)}</p>${g.status==="approved"&&got?`<p class="good">받은 아이템: ${got}</p>`:""}
           ${g.status==="returned"?'<p class="hint">선생님이 돌려보냈어요. 조금 더 자세히 다시 써 볼까요?</p>':""}</div>`;
@@ -1880,9 +1898,9 @@ function StudentItems(){
   return{
     mount(m){
       const el=h(`<div>${pageHead("내 아이템")}<section class="win"><div class="icards">${Object.entries(ITEMS).map(([k,it])=>`
-        <div class="icard"><div class="ie">${it.e}</div><b>${it.n}</b><div class="cnt2" data-r="n_${k}"></div><p class="hint">${it.d}</p>
+        <div class="icard"><div class="ie">${itemIcon(k,64)}</div><b>${it.n}</b><div class="cnt2" data-r="n_${k}"></div><p class="hint">${it.d}</p>
         <button class="btn blue" data-act="useItem" data-k="${k}" data-r="u_${k}">${k==="deco"?"열기":"사용하기"}</button></div>`).join("")}
-        <div class="icard"><div class="ie">🥚</div><b>포켓몬 알</b><div class="cnt2" data-r="n_egg"></div><p class="hint">레이드 1~3위 선물이에요. 레이드가 하나 끝나면 저절로 부화해서, 도감에 아직 없는 포켓몬이 나와요.</p></div></div>
+        <div class="icard"><div class="ie">${itemIcon("egg",64)}</div><b>포켓몬 알</b><div class="cnt2" data-r="n_egg"></div><p class="hint">레이드 1~3위가 받거나 선생님께 받을 수 있어요. 레이드가 하나 끝나면 저절로 부화해서, 도감에 아직 없는 포켓몬이 나와요.</p></div></div>
         <p class="hint mt">아이템은 선생님이 오늘의 성장 글을 승인할 때 줄 수 있어요.</p></section></div>`);
       m.append(el);R=refs(el);
     },
@@ -1903,11 +1921,20 @@ function openUse(k){
   if(k==="deco")return openDeco();
   if(!mons.length)return toast("아직 포켓몬이 없어요.");
   if(k==="evo"&&!GD.ready)return toast(GD.failed?"진화 정보를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.":"진화 정보를 불러오는 중이에요. 잠시 뒤 다시 눌러 주세요.");
-  openModal(`<h2>${ITEMS[k].e} ${esc(josa(ITEMS[k].n,"을","를"))} 누구에게 쓸까요?</h2><div class="mons mt">${mons.map(id=>{
-    const kids=k==="evo"?(GD.children[id]||[]):[1],dis=!kids.length;
-    return `<button class="mon${dis?" used":""}" ${dis?"disabled":""} data-act="useOn" data-k="${k}" data-id="${id}">${spr(id,false)}<span class="n">${esc(nameOf(id))}</span>
-      <span class="hint">${k==="atk"?`공격력 ${powText(power(st,id))}`:dis?"최종 진화":"진화 가능"}</span></button>`;}).join("")}</div>
+  const fs=faintSet(st);
+  if(k==="revive"&&!fs.size)return toast("기절한 포켓몬이 없어요.");
+  openModal(`<h2>${itemIcon(k,32)} ${esc(josa(ITEMS[k].n,"을","를"))} 누구에게 쓸까요?</h2><div class="mons mt">${mons.map(id=>{
+    const kids=k==="evo"?(GD.children[id]||[]):[1],dis=k==="revive"?!fs.has(id):!kids.length;
+    return `<button class="mon${dis?" used":""}" ${dis?"disabled":""} data-act="useOn" data-k="${k}" data-id="${id}">${spr(id,false,shy(st,id))}<span class="n">${esc(monName(st,id))}</span>
+      <span class="hint">${k==="atk"?`공격력 ${powText(power(st,id))}`:k==="revive"?(dis?"건강해요":"기절"):dis?"최종 진화":"진화 가능"}</span></button>`;}).join("")}</div>
     <button class="btn big" data-act="closeModal">닫기</button>`);
+}
+async function useRevive(id){
+  const st=D().students[S.sid],n=(st.items||{}).revive||0;if(n<1)return;
+  await Store.update(`rooms/${S.code}/students/${S.sid}`,{"items/revive":n-1,[`fainted/p${id}`]:null});
+  Snd.once("win");setTimeout(()=>Snd.cry(id),700);
+  openModal(`<div class="center"><div class="evobox">${spr(id,false,shy(st,id))}</div><h2>${esc(josa(nameOf(id),"이","가"))} 기운을 되찾았어요!</h2>
+    <p>다음 레이드에 다시 나갈 수 있어요.</p><button class="btn blue big" data-act="closeModal">좋아요!</button></div>`);
 }
 async function useAtk(id){
   const st=D().students[S.sid],n=(st.items||{}).atk||0;if(n<1)return;
@@ -1934,10 +1961,11 @@ async function evolve(from,to){
   const boosts=Object.assign({},st.boosts||{});const b=boosts["p"+from]||0;delete boosts["p"+from];if(b)boosts["p"+to]=b;
   const sw=x=>x===from?to:x;
   const shn=Object.assign({},st.shiny||{});if(shn["p"+from]){delete shn["p"+from];shn["p"+to]=true;}
+  const fn=Object.assign({},st.fainted||{});if(fn["p"+from]){delete fn["p"+from];fn["p"+to]=true;}
   await Store.update(`rooms/${S.code}/students/${S.sid}`,{
     mons:mons.map(sw),used:arr(st.used).map(sw),rep:st.rep===from?to:(st.rep??null),
     pick:st.pick&&st.pick.mon===from?{raid:st.pick.raid,mon:to}:(st.pick||null),
-    boosts:Object.keys(boosts).length?boosts:null,shiny:Object.keys(shn).length?shn:null,"items/evo":n-1,[`dex/p${from}`]:true,[`dex/p${to}`]:true});
+    boosts:Object.keys(boosts).length?boosts:null,shiny:Object.keys(shn).length?shn:null,fainted:Object.keys(fn).length?fn:null,"items/evo":n-1,[`dex/p${from}`]:true,[`dex/p${to}`]:true});
   openModal(`<div class="center"><h2>어라…?</h2><div class="evobox evoing">${spr(from,false).replace('class="spr"','class="spr e1"')}${spr(to,false).replace('class="spr"','class="spr e2"')}</div>
     <p id="evomsg">${esc(nameOf(from))}의 모습이…!</p><div id="evobtn"></div></div>`);
   Snd.cry(from);
@@ -1965,21 +1993,31 @@ async function openDeco(){
 }
 
 /* ---------------- 학생: 출전 포켓몬 고르기 ---------------- */
+/* ---------------- 학생: 출전 포켓몬 고르기 (최대 6마리) ---------------- */
+const faintSet=st=>new Set(Object.keys((st&&st.fainted)||{}).filter(k=>st.fainted[k]).map(k=>+k.slice(1)));
+const aliveMons=st=>{const f=faintSet(st);return arr(st&&st.mons).filter(x=>!f.has(x));};
 function StudentPick(){
   let R;
   return{
     mount(m){
-      const {meta}=D();
+      const {meta,students}=D();
+      S.team=aliveMons(students[S.sid]).slice(0,6);
       const el=h(`<div><div class="battle solo">${sceneHTML(meta.boss)}<div class="dlg"><div class="in" data-r="msg"></div></div></div>
-        <section class="win mt" style="max-width:680px;margin-left:auto;margin-right:auto"><h2>출전할 포켓몬을 골라 주세요</h2>
-          <p class="hint" data-r="note"></p><div class="mons mt" data-r="grid"></div></section></div>`);
+        <section class="win mt" style="max-width:680px;margin-left:auto;margin-right:auto"><h2>함께 싸울 포켓몬을 골라 주세요 (최대 6마리)</h2>
+          <p class="hint" data-r="note"></p><div class="mons mt" data-r="grid"></div>
+          <button class="btn go big" data-act="teamGo" data-r="go"></button></section></div>`);
       m.append(el);R=refs(el);R.foe.classList.add("appear");setTimeout(()=>Snd.cry(meta.boss),500);
       R.msg.textContent=`야생의 ${josa(nameOf(meta.boss),"이","가")} 나타났다!`;
     },
     update(){
-      const {students}=D();const me=students[S.sid];updateFoe(R);
-      R.note.textContent=allUsed(me)?"모든 포켓몬을 한 번씩 썼어요. 이제 다시 모두 쓸 수 있어요.":"한 번 쓴 포켓몬은 다른 포켓몬을 모두 한 번씩 쓸 때까지 쉬어요.";
-      setHTML(R.grid,monGrid(me,"pickMon",null));
+      const {students}=D();const st=students[S.sid];updateFoe(R);
+      const f=faintSet(st),mons=arr(st.mons);S.team=S.team.filter(x=>mons.includes(x)&&!f.has(x));
+      R.note.textContent=f.size?"기절한 포켓몬은 기력의 덩어리로 깨워야 출전할 수 있어요. 문제를 풀 때마다 공격하는 포켓몬이 차례대로 바뀌어요."
+        :"문제를 풀 때마다 공격하는 포켓몬이 차례대로 바뀌어요. 틀리면 그 포켓몬은 기절해요.";
+      setHTML(R.grid,mons.map(id=>{const ft=f.has(id),on=S.team.includes(id);
+        return `<button class="mon${ft?" used fainted2":""}${on?" pick":""}" ${ft?"disabled":""} data-act="teamToggle" data-id="${id}">${spr(id,false,shy(st,id))}<span class="n">${esc(monName(st,id))}</span>${on?`<span class="tag">${S.team.indexOf(id)+1}번째</span>`:""}${ft?'<span class="ftag">기절</span>':""}</button>`;}).join(""));
+      R.go.disabled=!S.team.length;
+      R.go.textContent=S.team.length?`${S.team.length}마리로 출전하기!`:(mons.length?"출전할 포켓몬을 골라 주세요":"포켓몬이 없어요");
     }
   };
 }
@@ -1987,9 +2025,10 @@ function StudentPick(){
 /* ---------------- 학생: 배틀 (문제를 계속 풀어요) ---------------- */
 const hearts=a=>"♥".repeat(Math.max(0,a.hearts||0))+"♡".repeat(Math.max(0,(a.maxHearts||0)-(a.hearts||0)));
 function StudentBattle(){
-  let R,ans="",fv={w:"",n:"",d:""},fa="w",sel=-1,phase=null,shownK=null,onKey,fbTimer=null;
+  let R,ans="",fv={w:"",n:"",d:""},fa="w",sel=-1,phase=null,shownK=null,shownMon=null,onKey,fbTimer=null;
   const KEYS=k=>`<button data-act="key" data-k="${k}" aria-label="${k==="del"?"지우기":k==="next"?"다음 칸":k}">${k==="del"?"⌫":k==="next"?"→":k}</button>`;
-  const mine=()=>D().atts[S.sid];
+  const mine=()=>D().atts[S.sid],meSt=()=>D().students[S.sid];
+  const teamOf=a=>arr(a.team).length?arr(a.team):[a.mon];
   function padFor(p){
     const t=p.type||"num";
     if(t==="choice")return `<div class="choices">${arr(p.choices).map((c,i)=>`<button data-act="key" data-k="c${i}" aria-pressed="false">${esc(c)}</button>`).join("")}</div>
@@ -2013,17 +2052,22 @@ function StudentBattle(){
     R.pad.innerHTML=padFor(p);drawAns();
   }
   function drawMe(a){
+    const st=meSt(),f=faintSet(st);
+    if(shownMon!==a.mon){shownMon=a.mon;R.me.className="me-spr appear";R.me.innerHTML=spr(a.mon,true,shy(st,a.mon));R.mename.textContent=monName(st,a.mon);}
     setHp(R.mehp,a.hearts||0,a.maxHearts||1);
     R.menum.innerHTML=`<span class="hearts">${hearts(a)}</span> ${esc(S.user.num+"번 "+S.user.name)}`;
     R.score.textContent=`내 명중 ${a.hits||0}번`;
+    setHTML(R.team,teamOf(a).map(id=>`<span class="tm${f.has(id)?" out":""}${id===a.mon?" now":""}" title="${esc(nameOf(id))}">${spr(id,false,shy(st,id))}</span>`).join(""));
   }
   function render(){
     const {hp}=D(),a=mine();if(!a)return;
     drawMe(a);
     if(phase==="anim"||phase==="fb")return;
-    if(a.fainted){
-      if(phase!=="out"){phase="out";R.me.classList.add("fainted");R.pad.innerHTML="";
-        R.msg.innerHTML=`<p class="q">${esc(josa(nameOf(a.mon),"은","는"))} 쓰러졌다!</p><p class="sub">하트를 모두 잃어서 이번 레이드에서는 더 싸울 수 없어요. 지금까지 ${a.hits||0}번 명중시켰어요. 친구들을 응원해 주세요!</p>`;}
+    const alive=teamOf(a).filter(x=>!faintSet(meSt()).has(x));
+    if(a.fainted||!alive.length){
+      if(phase!=="out"){phase="out";R.pad.innerHTML="";R.me.classList.add("fainted");
+        R.msg.innerHTML=a.fainted?`<p class="q">하트를 모두 잃었어요!</p><p class="sub">이번 레이드에서는 더 공격할 수 없어요. 지금까지 ${a.hits||0}번 명중시켰어요. 친구들을 응원해 주세요!</p>`
+          :`<p class="q">함께 싸운 포켓몬이 모두 기절했어요!</p><p class="sub">이번 레이드에서는 더 공격할 수 없어요. 지금까지 ${a.hits||0}번 명중시켰어요. 레이드가 끝나면 기력의 덩어리로 깨울 수 있어요.</p>`;}
       return;
     }
     if(hp===0||!a.cur){
@@ -2033,27 +2077,28 @@ function StudentBattle(){
     }
     if(shownK!==a.cur.k){shownK=a.cur.k;phase="q";question(a.cur);}
   }
-  function feedback(hit,crit,p,given){
-    phase="fb";const mon=esc(nameOf(mine().mon));
+  function feedback(hit,crit,p,given,mon,next){
+    phase="fb";const mn=esc(nameOf(mon));
+    const nx=next&&next!==mon?`<p class="sub">다음은 ${esc(nameOf(next))}의 차례!</p>`:"";
     if(hit){
-      R.msg.innerHTML=crit?`<p class="q"><b class="crit">크리티컬!</b> ${mon}의 공격이 급소에 맞았다! <b class="good">두 번 명중!</b></p>`:`<p class="q">${mon}의 공격! <b class="good">명중했다!</b></p>`;
+      R.msg.innerHTML=(crit?`<p class="q"><b class="crit">크리티컬!</b> ${mn}의 공격이 급소에 맞았다! <b class="good">두 번 명중!</b></p>`:`<p class="q">${mn}의 공격! <b class="good">명중했다!</b></p>`)+nx;
       R.pad.innerHTML='<p class="sub">다음 문제가 나와요…</p>';
-      fbTimer=setTimeout(()=>{phase=null;render();},1000);
+      fbTimer=setTimeout(()=>{phase=null;render();},1100);
     }else{
-      R.msg.innerHTML=`<p class="q">${mon}의 공격은 <b class="bad">빗나갔다!</b></p><p class="sub">정답: ${answerHTML(p)}${given?` (내 답: ${rich(given)})`:""}</p>`;
+      R.msg.innerHTML=`<p class="q">${mn}의 공격은 <b class="bad">빗나갔다!</b> ${esc(josa(nameOf(mon),"은","는"))} 기절했다…</p><p class="sub">정답: ${answerHTML(p)}${given?` (내 답: ${rich(given)})`:""}</p>${next?nx:""}`;
       R.pad.innerHTML='<button class="btn blue big" data-act="key" data-k="go" disabled>3초 뒤에 다음 문제</button>';
       let n=3;const b=R.pad.querySelector("button");
       fbTimer=setInterval(()=>{n--;if(!b.isConnected)return clearInterval(fbTimer);
-        if(n>0)b.textContent=`${n}초 뒤에 다음 문제`;else{clearInterval(fbTimer);b.disabled=false;b.textContent="다음 문제";}},1000);
+        if(n>0)b.textContent=`${n}초 뒤에 다음 문제`;else{clearInterval(fbTimer);b.disabled=false;b.textContent=next?"다음 문제":"확인";}},1000);
     }
   }
   return{
     mount(m){
       const {meta,atts}=D();const a=atts[S.sid];
-      const el=h(`<div class="battle solo">${sceneHTML(meta.boss,a.mon,shy(D().students[S.sid],a.mon))}<div class="dlg"><div class="in">
-        <p class="score" data-r="score"></p><div data-r="msg"></div><div data-r="pad"></div></div></div></div>`);
+      const el=h(`<div class="battle solo">${sceneHTML(meta.boss,null)}<div class="dlg"><div class="in">
+        <div class="teamrow"><span class="team" data-r="team"></span><span class="score" data-r="score"></span></div><div data-r="msg"></div><div data-r="pad"></div></div></div></div>`);
       m.append(el);R=refs(el);
-      R.mebox.hidden=false;R.mename.textContent=nameOf(a.mon);
+      R.mebox.hidden=false;
       setTimeout(()=>Snd.cry(a.mon),300);
       onKey=e=>{
         if(BA.key){if(/^[0-9]$/.test(e.key))BA.key(e.key);else if(e.key==="Backspace")BA.key("del");else if(e.key==="Enter")BA.key("ok");else return;e.preventDefault();return;}
@@ -2099,17 +2144,25 @@ function StudentBattle(){
         if(!ans||ans==="."||ans==="0.")return toast("답을 먼저 입력해 주세요.");
         hit=Math.round(parseFloat(ans)*100)===p.ans;given=ans;
       }
-      const pw=power(D().students[S.sid],a.mon),crit=hit&&Math.random()<(pw.total||pw.bonus||0)/10000;
+      const mon=a.mon,st=meSt(),pw=power(st,mon),crit=hit&&Math.random()<(pw.total||pw.bonus||0)/10000;
       const dmg=hit?(crit?2:1):0;
+      // 다음에 공격할 포켓몬: 기절하지 않은 포켓몬 중 다음 차례
+      const team=teamOf(a),f=faintSet(st);if(!hit)f.add(mon);
+      let next=null;const i0=team.indexOf(mon);
+      for(let i=1;i<=team.length;i++){const c=team[(i0+i)%team.length];if(!f.has(c)){next=c;break;}}
       phase="anim";R.pad.innerHTML="";
-      R.msg.innerHTML=`<p class="q">${esc(nameOf(a.mon))}의 공격!</p>`;
+      R.msg.innerHTML=`<p class="q">${esc(nameOf(mon))}의 공격!</p>`;
       restart(R.me,"lunge");restart(R.foe,hit?"hurt":"dodge");setTimeout(()=>Snd.sfx(hit?"hit":"miss"),250);
       if(crit){setTimeout(()=>{critFx(R.foe.parentElement);restart(R.me,"lunge");restart(R.foe,"hurt");},650);setTimeout(()=>Snd.sfx("hit"),900);}
-      const next=hp-dmg>0?{...makeProblem(meta.units),k:p.k+1}:null;
-      try{await Store.update(`rooms/${S.code}/attempts/r${raid}/${S.sid}`,{hits:(a.hits||0)+dmg,ok:(a.ok||0)+(hit?1:0),ng:(a.ng||0)+(hit?0:1),
-        crit:(a.crit||0)+(crit?1:0),last:{at:Date.now(),hit,crit},cur:next,[`log/q${p.k}`]:{u:p.u||"dec",ok:hit}});}
+      if(!hit)setTimeout(()=>{if(R.me.isConnected)R.me.classList.add("fainted");},700);
+      const ap=`attempts/r${raid}/${S.sid}/`;
+      const upd={[ap+"hits"]:(a.hits||0)+dmg,[ap+"ok"]:(a.ok||0)+(hit?1:0),[ap+"ng"]:(a.ng||0)+(hit?0:1),[ap+"crit"]:(a.crit||0)+(crit?1:0),
+        [ap+"last"]:{at:Date.now(),hit,crit,mon},[ap+"cur"]:next&&hp-dmg>0?{...makeProblem(meta.units),k:p.k+1}:null,
+        [ap+"mon"]:next||mon,[ap+`log/q${p.k}`]:{u:p.u||"dec",ok:hit,mon}};
+      if(!hit)upd[`students/${S.sid}/fainted/p${mon}`]=true;
+      try{await Store.update("rooms/"+S.code,upd);}
       catch(e){phase="q";question(p);toast("저장하지 못했어요. 다시 공격해 주세요.");return;}
-      setTimeout(()=>{if(R.msg.isConnected)feedback(hit,crit,p,given);},crit?1500:900);
+      setTimeout(()=>{if(R.msg.isConnected)feedback(hit,crit,p,given,mon,next);},crit?1500:900);
     }
   };
 }
@@ -2166,12 +2219,14 @@ function StudentResult(){let R,shown=false;return{mount(m){
   if(s){const n=s.ok+s.ng,acc=n?s.ok/n:0;
     html+=`<p class="mt">맞힌 문제 <b>${s.ok}</b> / 푼 문제 ${n} (정확도 <b>${n?pct(acc):"-"}</b>)${rk>=0?`, 순위 <b>${rk+1}위</b>`:""}</p>`;
     if(s.prev!=null&&n>=3)html+=`<p class="hint">지난 레이드 정확도 ${pct(s.prev)} → 이번 ${pct(acc)} ${acc>s.prev+1e-9?"▲ 올랐어요!":acc<s.prev-1e-9?"▼":""}</p>`;
-    if(a)html+=`<p class="hint">남은 하트 ${a.hearts||0}개${a.crit?`, 크리티컬 ${a.crit}번`:""}</p>`;}
+    if(a){const fs=faintSet(students[S.sid]),ko=(arr(a.team).length?arr(a.team):[a.mon]).filter(x=>fs.has(x));
+      html+=`<p class="hint">남은 하트 ${a.hearts||0}개${a.crit?`, 크리티컬 ${a.crit}번`:""}</p>`;
+      if(ko.length)html+=`<p class="hint">기절한 포켓몬: ${ko.map(nameOf).join(", ")} (기력의 덩어리로 깨울 수 있어요)</p>`;}}
   else html+=`<p class="mt">${parts[S.sid]?"이번 레이드에는 문제를 풀지 못했어요.":"이번 레이드에는 참여하지 않았어요."}</p>`;
   const g=[];
   if(w.legend)g.push(`<div class="gift${w.shiny?" shiny":""}">${spr(x.boss,false,w.shiny)}<b>${w.shiny?"✨ 이로치 ":""}${esc(nameOf(x.boss))}</b><span>${x.legendN}문제 이상 맞혀서 받았어요!</span></div>`);
-  if(w.egg)g.push(`<div class="gift"><div class="ge">🥚</div><b>포켓몬 알</b><span>${rk+1}위 선물! 다음 레이드가 끝나면 부화해요.</span></div>`);
-  if(w.evo)g.push(`<div class="gift"><div class="ge">💜</div><b>진화의 마음</b><span>정확도가 올라서 받았어요!</span></div>`);
+  if(w.egg)g.push(`<div class="gift"><div class="ge">${itemIcon("egg",72)}</div><b>포켓몬 알</b><span>${rk+1}위 선물! 다음 레이드가 끝나면 부화해요.</span></div>`);
+  if(w.evo)g.push(`<div class="gift"><div class="ge">${itemIcon("evo",72)}</div><b>진화의 마음</b><span>정확도가 올라서 받았어요!</span></div>`);
   arr(w.hatch).forEach(id=>g.push(`<div class="gift">${spr(id,false)}<b>${esc(nameOf(id))}</b><span>알에서 태어났어요!</span></div>`));
   if(g.length)html+=`<h2 class="mt">받은 선물</h2><div class="gifts">${g.join("")}</div>`;
   setHTML(R.mine,html);
@@ -2205,17 +2260,17 @@ function TeacherGrowth(){
       const done=all.filter(([,g])=>g.status!=="pending").sort((a,b)=>(b[1].decided||0)-(a[1].decided||0)).slice(0,40);
       R.pc.textContent=`${pend.length}개`;
       setHTML(R.pend,pend.length?pend.map(([gid,g])=>{
-        const rw=T.rw[gid]||(T.rw[gid]={atk:0,deco:0,evo:0}),tot=rw.atk+rw.deco+rw.evo;
+        const rw=T.rw[gid]||(T.rw[gid]={atk:0,deco:0,evo:0,revive:0,egg:0}),tot=Object.values(rw).reduce((a,b)=>a+b,0);
         return `<div class="gcard"><div class="gmeta"><b>${g.num}번 ${esc(g.name)}</b> <span class="tag2">${esc(g.cat)}</span> <span class="hint">${esc(g.date)}</span></div>
           <p class="gtext">${esc(g.text)}</p>
-          <div class="rw">${Object.entries(ITEMS).map(([k,it])=>`<span class="rwi">${it.e} ${it.n}
+          <div class="rw">${Object.entries(GIFTS).map(([k,it])=>`<span class="rwi">${itemIcon(k,28)} ${it.n}
             <button class="btn small" data-act="rw" data-g="${gid}" data-k="${k}" data-d="-1" aria-label="${it.n} 줄이기">−</button><b>${rw[k]}</b>
             <button class="btn small" data-act="rw" data-g="${gid}" data-k="${k}" data-d="1" aria-label="${it.n} 늘리기">+</button></span>`).join("")}</div>
           <div class="gbtns"><button class="btn blue" data-act="gok" data-g="${gid}">${tot?`승인하고 아이템 ${tot}개 주기`:"승인하기"}</button>
             <button class="btn" data-act="gno" data-g="${gid}">돌려보내기</button></div></div>`;
       }).join(""):'<p class="hint">확인할 글이 없어요.</p>');
       setHTML(R.done,done.length?done.map(([,g])=>{const rw=g.reward||{};
-        const got=Object.keys(ITEMS).filter(k=>rw[k]).map(k=>`${ITEMS[k].e}${rw[k]}`).join(" ");
+        const got=Object.keys(GIFTS).filter(k=>rw[k]).map(k=>`${itemIcon(k,22)}${rw[k]}`).join(" ");
         return `<div class="gcard"><div class="gmeta"><b>${g.num}번 ${esc(g.name)}</b> <span class="tag2">${esc(g.cat)}</span> <span class="hint">${esc(g.date)}</span>
           <span class="st ${g.status}">${g.status==="approved"?"승인함":"돌려보냄"}</span> ${got}</div><p class="gtext">${esc(g.text)}</p></div>`;
       }).join(""):'<p class="hint">아직 없어요.</p>');
@@ -2266,7 +2321,7 @@ const ACT={
   closeModal(){modal.hidden=true;modal.innerHTML="";T.grant=null;},
   pickBoss(b){T.boss=+b.dataset.id;document.querySelectorAll(".bossgrid button").forEach(x=>x.setAttribute("aria-pressed",String(+x.dataset.id===T.boss)));cur.v.boss&&cur.v.boss();},
   hpStep(b){T.hp=Math.min(99,Math.max(1,T.hp+(+b.dataset.d)));$("#hpIn").value=T.hp;},
-  hpAll(){const n=sorted(D().students).filter(([k,s])=>isOnline(k)&&arr(s.mons).length).length;T.hp=Math.max(1,Math.min(99,n*3));$("#hpIn").value=T.hp;},
+  hpAll(){const n=sorted(D().students).filter(([k,s])=>isOnline(k)&&aliveMons(s).length).length;T.hp=Math.max(1,Math.min(99,n*3));$("#hpIn").value=T.hp;},
   heartStep(b){T.hearts=Math.max(1,Math.min(5,T.hearts+(+b.dataset.d)));cur.v.update();},
   async bossAtk(){
     const {meta,hp}=D();if(meta.stage!=="raid")return;
@@ -2278,9 +2333,9 @@ const ACT={
   bakey(b){BA.key&&BA.key(b.dataset.k);},
   async startRaid(){
     const {meta,students}=D();const parts={};
-    sorted(students).forEach(([k,s])=>{if(isOnline(k)&&arr(s.mons).length)parts[k]=true;});
+    sorted(students).forEach(([k,s])=>{if(isOnline(k)&&aliveMons(s).length)parts[k]=true;});
     const n=Object.keys(parts).length;
-    if(!n)return toast("접속해 있고 포켓몬이 있는 학생이 없어요.");
+    if(!n)return toast("접속해 있고 기절하지 않은 포켓몬이 있는 학생이 없어요.");
     await Store.update(`rooms/${S.code}/meta`,{stage:"raid",raidNo:(meta.raidNo||0)+1,boss:T.boss,maxHp:T.hp,units:T.units,participants:parts,result:null,
       hearts:T.hearts,atkEvery:T.atkEvery,atkTime:T.atkTime,legendN:T.legendN,bossAtk:null,startedAt:Date.now()});
   },
@@ -2382,14 +2437,18 @@ const ACT={
     toast("선생님께 보냈어요!");
   },
   useItem(b){openUse(b.dataset.k);},
-  useOn(b){const id=+b.dataset.id;if(b.dataset.k==="atk"){if(confirm(`${nameOf(id)}에게 파워 사탕을 줄까요?`))useAtk(id);}else chooseEvo(id);},
+  useOn(b){const id=+b.dataset.id;if(b.dataset.k==="atk"){if(confirm(`${nameOf(id)}에게 파워 사탕을 줄까요?`))useAtk(id);}
+    else if(b.dataset.k==="revive")useRevive(id);else chooseEvo(id);},
+  teamToggle(b){const id=+b.dataset.id;if(S.team.includes(id))S.team=S.team.filter(x=>x!==id);else{if(S.team.length>=6)return toast("최대 6마리까지 고를 수 있어요.");S.team=[...S.team,id];}cur.v.update();},
+  teamGo(){createAttempt(S.team.slice());},
   evoTo(b){evolve(+b.dataset.from,+b.dataset.to);},
   rw(b){const r=T.rw[b.dataset.g];if(!r)return;r[b.dataset.k]=Math.max(0,Math.min(5,r[b.dataset.k]+(+b.dataset.d)));cur.v.update();},
   async gok(b){
     const gid=b.dataset.g,{room,students}=D(),g=(room.growth||{})[gid];if(!g)return;
-    const rw=T.rw[gid]||{atk:0,deco:0,evo:0},st=students[g.sid],it=(st&&st.items)||{};
+    const rw=T.rw[gid]||{atk:0,deco:0,evo:0,revive:0,egg:0},st=students[g.sid],it=(st&&st.items)||{};
     const upd={[`growth/${gid}/status`]:"approved",[`growth/${gid}/reward`]:rw,[`growth/${gid}/decided`]:Date.now()};
     if(st)for(const k of Object.keys(ITEMS))if(rw[k])upd[`students/${g.sid}/items/${k}`]=(it[k]||0)+rw[k];
+    if(st)for(let i=0;i<(rw.egg||0);i++)upd[`students/${g.sid}/eggs/g${gid}${i}`]={got:D().meta.raidNo||0};
     await Store.update("rooms/"+S.code,upd);delete T.rw[gid];
     toast(`${g.name}의 글을 승인했어요.`);
   },
