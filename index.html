@@ -1306,12 +1306,11 @@ function pxIcon(id,px=3){const p=pxSprite(id);return `<img class="pxi" src="${p.
 const ITEMS={
   atk:{n:"파워 사탕",e:"🍬",d:"포켓몬 한 마리의 공격력이 30 올라가요."},
   deco:{n:"꾸미기 상자",e:"🎁",d:"열면 대표 포켓몬 꾸미기가 랜덤으로 나와요. 아주 가끔 배경이 나와요!"},
-  evo:{n:"진화의 마음",e:"💜",d:"포켓몬 한 마리를 진화시켜요. 최종 진화한 포켓몬에는 쓸 수 없어요."},
-  revive:{n:"기력의 덩어리",e:"🔶",d:"기절한 포켓몬 한 마리를 깨워요. 깨운 포켓몬은 다음 레이드에 나갈 수 있어요."}
+  evo:{n:"진화의 마음",e:"💜",d:"포켓몬 한 마리를 진화시켜요. 최종 진화한 포켓몬에는 쓸 수 없어요."}
 };
 const GIFTS={...ITEMS,egg:{n:"포켓몬 알",e:"🥚"}};
 /* 아이템 그림: PokeAPI의 실제 아이템 그림을 불러와요. 못 불러오면 다음 후보, 그래도 안 되면 이모지로 보여요. */
-const ITEM_IMG={atk:["rare-candy"],deco:["poke-doll","pretty-feather"],evo:["shiny-stone","moon-stone"],revive:["max-revive"],egg:["mystery-egg","lucky-egg"]};
+const ITEM_IMG={atk:["rare-candy"],deco:["poke-doll","pretty-feather"],evo:["shiny-stone","moon-stone"],egg:["mystery-egg","lucky-egg"]};
 const ITEM_BASE="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/";
 function itemIcon(k,size=32){
   const c=ITEM_IMG[k]||[],e=(GIFTS[k]||{}).e||"";
@@ -1461,7 +1460,7 @@ function TeacherSetup(){
       if(T.boss==null)T.boss=meta.boss||150;
       if(T.hp==null)T.hp=meta.maxHp||10;
       if(T.units==null)T.units=arr(meta.units).length?arr(meta.units):["dec"];
-      if(T.hearts==null)T.hearts=meta.hearts||3;
+      if(T.hearts==null)T.hearts=meta.hearts||5;
       if(T.legendN==null)T.legendN=meta.legendN!=null?meta.legendN:10;
       if(T.atkEvery==null)T.atkEvery=meta.atkEvery!=null?meta.atkEvery:120;
       if(T.atkTime==null)T.atkTime=meta.atkTime||10;
@@ -1477,7 +1476,7 @@ function TeacherSetup(){
             <p class="lbl">문제 단원 (4학년 2학기, 여러 개 고를 수 있어요)</p>
             <div class="chips2 units" data-r="units"></div>
             <label class="lbl" for="hpIn">모두 합쳐 몇 번 맞히면 잡을까요?</label>
-            <p class="hint">지금 접속해 있고 기절하지 않은 포켓몬이 있는 학생만 참여해요. 학생마다 문제를 계속 풀 수 있고, 맞힌 횟수를 모두 더해요. 크리티컬은 2번으로 세요.</p>
+            <p class="hint">지금 접속해 있고 포켓몬이 있는 학생만 참여해요. 학생마다 하트가 남아 있는 동안 문제를 계속 풀 수 있고, 맞힌 횟수를 모두 더해요. 크리티컬은 2번으로 세요.</p>
             <div class="stepper"><button class="btn small" data-act="hpStep" data-d="-1" aria-label="줄이기">−</button>
               <input id="hpIn" type="number" min="1" max="99" inputmode="numeric" value="${T.hp}">
               <button class="btn small" data-act="hpStep" data-d="1" aria-label="늘리기">+</button>
@@ -1487,7 +1486,7 @@ function TeacherSetup(){
             <div class="stepper"><button class="btn small" data-act="heartStep" data-d="-1" aria-label="하트 줄이기">−</button>
               <b class="hearts big2" data-r="hearts"></b>
               <button class="btn small" data-act="heartStep" data-d="1" aria-label="하트 늘리기">+</button></div>
-            <p class="hint">전설의 포켓몬이 공격할 때 시간 안에 문제를 못 풀거나 틀리면 하트가 1개 줄어요. 하트를 모두 잃으면 그 레이드에서는 더 싸울 수 없어요.</p>
+            <p class="hint">레이드 문제를 틀리거나, 전설의 포켓몬이 공격할 때 시간 안에 못 풀거나 틀리면 하트가 1개 줄어요. 하트를 모두 잃으면 그 레이드에서는 더 싸울 수 없어요.</p>
             <div class="two2"><div><label class="lbl" for="atkEvery">전설의 포켓몬 자동 공격</label>
               <select id="atkEvery"><option value="0">끄기 (버튼으로만)</option><option value="60">1분마다</option><option value="120">2분마다</option><option value="180">3분마다</option><option value="300">5분마다</option></select></div>
               <div><label class="lbl" for="atkTime">막아 내는 제한 시간</label>
@@ -1589,7 +1588,7 @@ function TeacherRaid(){
         <div class="battle">${sceneHTML(meta.boss)}<div class="dlg"><div class="in" data-r="msg"></div></div></div>
         <section class="win"><h2>${meta.raidNo}번째 레이드 (참여 ${Object.keys(parts).length}명)</h2>
           <p class="hint">${arr(meta.units).length?arr(meta.units).map(k=>UNITS[k]).filter(Boolean).join(", "):UNITS.dec}</p>
-          <p class="hint">하트 ${meta.hearts||3}개, ${every?`${every/60}분마다 자동 공격 (${meta.atkTime||10}초)`:"자동 공격 꺼짐"}</p>
+          <p class="hint">하트 ${meta.hearts||5}개, ${every?`${every/60}분마다 자동 공격 (${meta.atkTime||10}초)`:"자동 공격 꺼짐"}</p>
           <div class="batbar"><span data-r="next"></span><button class="btn small go" data-act="bossAtk">지금 공격!</button></div>
           <div class="tally" data-r="tally"></div>
           <div class="chips" data-r="chips"></div><button class="btn go big" data-act="endRaid">레이드 종료</button></section>
@@ -1624,8 +1623,8 @@ function TeacherRaid(){
         const a=atts[sid];let cls="idle",txt="포켓몬 고르는 중";
         if(a){tot.ok+=a.ok||0;tot.ng+=a.ng||0;tot.hit+=a.hits||0;
           const fs=faintSet(st),tm=arr(a.team).length?arr(a.team):[a.mon],alive=tm.filter(x=>!fs.has(x)).length,ko=tm.length-alive;
-          if(a.fainted||!alive){cls="miss";tot.out++;txt=`${a.fainted?"하트 0":"모두 기절"}, 명중 ${a.hits||0}`;}
-          else{cls=a.hits?"hit":"pending";txt=`${nameOf(a.mon)} 차례, 명중 ${a.hits||0}${a.crit?` (크리 ${a.crit})`:""}${ko?`, 기절 ${ko}`:""}`;}}
+          if(a.fainted||!alive){cls="miss";tot.out++;txt=`하트 0, 명중 ${a.hits||0}`;}
+          else{cls=a.hits?"hit":"pending";txt=`${nameOf(a.mon)} 차례, 명중 ${a.hits||0}${a.crit?` (크리 ${a.crit})`:""}`;}}
         return `<div class="chip ${cls}"><span class="dot${isOnline(sid)?" on":""}"></span> ${st.num}번 ${esc(st.name)}<small>${esc(txt)}</small>${a?`<small class="hearts">${hearts(a)}</small>`:""}</div>`;
       }).join(""));
       setHTML(R.tally,`<span><b>${tot.hit}</b>총 명중</span><span><b>${tot.ok}</b>맞힌 문제</span><span><b>${tot.ng}</b>틀린 문제</span><span><b>${tot.out}</b>공격 끝난 친구</span>`);
@@ -1714,7 +1713,7 @@ async function createAttempt(team){
   if(meta.stage!=="raid"||atts[S.sid]||S.creating===raid)return;
   const f=faintSet(students[S.sid]);team=team.filter(x=>!f.has(x)).slice(0,6);
   if(!team.length)return toast("출전할 포켓몬을 골라 주세요.");
-  S.creating=raid;const H=meta.hearts||3;
+  S.creating=raid;const H=meta.hearts||5;
   try{
     await Store.set(`rooms/${S.code}/attempts/r${raid}/${S.sid}`,{team,mon:team[0],hits:0,ok:0,ng:0,crit:0,hearts:H,maxHearts:H,cur:{...makeProblem(meta.units),k:1},at:Date.now()});
   }catch(e){S.creating=null;toast("저장하지 못했어요. 다시 눌러 주세요.");}
@@ -1782,11 +1781,11 @@ function StudentMons(){
       const {meta,students}=D();const st=students[S.sid];
       const mons=arr(st.mons),rep=repOf(st),fs=faintSet(st);
       R.note.textContent=!mons.length?"아직 받은 포켓몬이 없어요. 선생님께 포켓몬을 받으면 여기에 나타나요."
-        :fs.size?"기절한 포켓몬은 내 아이템의 기력의 덩어리를 쓰면 다시 레이드에 나갈 수 있어요.":"레이드에서는 최대 6마리까지 함께 싸울 수 있어요.";
+        :"레이드에서는 최대 6마리까지 함께 싸울 수 있어요.";
       setHTML(R.grid,mons.map(id=>{
         const u=fs.has(id),p=power(st,id);
         return `<div class="mcard${u?" used":""}">${spr(id,false,shy(st,id))}<b>${esc(monName(st,id))}</b>
-          <span class="pw">공격력 ${powText(p)}</span>${p.total?`<span class="hint">크리티컬 ${(p.total/100).toFixed(2)}%</span>`:""}<span class="hint">${rep===id?"⭐ 대표 포켓몬":"&nbsp;"}</span>${u?'<span class="bad">기절 (기력의 덩어리 필요)</span>':""}</div>`;
+          <span class="pw">공격력 ${powText(p)}</span>${p.total?`<span class="hint">크리티컬 ${(p.total/100).toFixed(2)}%</span>`:""}<span class="hint">${rep===id?"⭐ 대표 포켓몬":"&nbsp;"}</span></div>`;
       }).join(""));
     }
   };
@@ -1922,19 +1921,11 @@ function openUse(k){
   if(!mons.length)return toast("아직 포켓몬이 없어요.");
   if(k==="evo"&&!GD.ready)return toast(GD.failed?"진화 정보를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.":"진화 정보를 불러오는 중이에요. 잠시 뒤 다시 눌러 주세요.");
   const fs=faintSet(st);
-  if(k==="revive"&&!fs.size)return toast("기절한 포켓몬이 없어요.");
   openModal(`<h2>${itemIcon(k,32)} ${esc(josa(ITEMS[k].n,"을","를"))} 누구에게 쓸까요?</h2><div class="mons mt">${mons.map(id=>{
-    const kids=k==="evo"?(GD.children[id]||[]):[1],dis=k==="revive"?!fs.has(id):!kids.length;
+    const kids=k==="evo"?(GD.children[id]||[]):[1],dis=!kids.length;
     return `<button class="mon${dis?" used":""}" ${dis?"disabled":""} data-act="useOn" data-k="${k}" data-id="${id}">${spr(id,false,shy(st,id))}<span class="n">${esc(monName(st,id))}</span>
-      <span class="hint">${k==="atk"?`공격력 ${powText(power(st,id))}`:k==="revive"?(dis?"건강해요":"기절"):dis?"최종 진화":"진화 가능"}</span></button>`;}).join("")}</div>
+      <span class="hint">${k==="atk"?`공격력 ${powText(power(st,id))}`:dis?"최종 진화":"진화 가능"}</span></button>`;}).join("")}</div>
     <button class="btn big" data-act="closeModal">닫기</button>`);
-}
-async function useRevive(id){
-  const st=D().students[S.sid],n=(st.items||{}).revive||0;if(n<1)return;
-  await Store.update(`rooms/${S.code}/students/${S.sid}`,{"items/revive":n-1,[`fainted/p${id}`]:null});
-  Snd.once("win");setTimeout(()=>Snd.cry(id),700);
-  openModal(`<div class="center"><div class="evobox">${spr(id,false,shy(st,id))}</div><h2>${esc(josa(nameOf(id),"이","가"))} 기운을 되찾았어요!</h2>
-    <p>다음 레이드에 다시 나갈 수 있어요.</p><button class="btn blue big" data-act="closeModal">좋아요!</button></div>`);
 }
 async function useAtk(id){
   const st=D().students[S.sid],n=(st.items||{}).atk||0;if(n<1)return;
@@ -1994,7 +1985,7 @@ async function openDeco(){
 
 /* ---------------- 학생: 출전 포켓몬 고르기 ---------------- */
 /* ---------------- 학생: 출전 포켓몬 고르기 (최대 6마리) ---------------- */
-const faintSet=st=>new Set(Object.keys((st&&st.fainted)||{}).filter(k=>st.fainted[k]).map(k=>+k.slice(1)));
+const faintSet=st=>new Set();
 const aliveMons=st=>{const f=faintSet(st);return arr(st&&st.mons).filter(x=>!f.has(x));};
 function StudentPick(){
   let R;
@@ -2012,8 +2003,7 @@ function StudentPick(){
     update(){
       const {students}=D();const st=students[S.sid];updateFoe(R);
       const f=faintSet(st),mons=arr(st.mons);S.team=S.team.filter(x=>mons.includes(x)&&!f.has(x));
-      R.note.textContent=f.size?"기절한 포켓몬은 기력의 덩어리로 깨워야 출전할 수 있어요. 문제를 풀 때마다 공격하는 포켓몬이 차례대로 바뀌어요."
-        :"문제를 풀 때마다 공격하는 포켓몬이 차례대로 바뀌어요. 틀리면 그 포켓몬은 기절해요.";
+      R.note.textContent="문제를 풀 때마다 공격하는 포켓몬이 차례대로 바뀌어요. 문제를 틀리거나 전설의 포켓몬의 공격을 못 막으면 하트가 1개 줄고, 하트가 모두 없어지면 더 공격할 수 없어요.";
       setHTML(R.grid,mons.map(id=>{const ft=f.has(id),on=S.team.includes(id);
         return `<button class="mon${ft?" used fainted2":""}${on?" pick":""}" ${ft?"disabled":""} data-act="teamToggle" data-id="${id}">${spr(id,false,shy(st,id))}<span class="n">${esc(monName(st,id))}</span>${on?`<span class="tag">${S.team.indexOf(id)+1}번째</span>`:""}${ft?'<span class="ftag">기절</span>':""}</button>`;}).join(""));
       R.go.disabled=!S.team.length;
@@ -2067,7 +2057,7 @@ function StudentBattle(){
     if(a.fainted||!alive.length){
       if(phase!=="out"){phase="out";R.pad.innerHTML="";R.me.classList.add("fainted");
         R.msg.innerHTML=a.fainted?`<p class="q">하트를 모두 잃었어요!</p><p class="sub">이번 레이드에서는 더 공격할 수 없어요. 지금까지 ${a.hits||0}번 명중시켰어요. 친구들을 응원해 주세요!</p>`
-          :`<p class="q">함께 싸운 포켓몬이 모두 기절했어요!</p><p class="sub">이번 레이드에서는 더 공격할 수 없어요. 지금까지 ${a.hits||0}번 명중시켰어요. 레이드가 끝나면 기력의 덩어리로 깨울 수 있어요.</p>`;}
+          :`<p class="q">더 공격할 수 없어요.</p><p class="sub">지금까지 ${a.hits||0}번 명중시켰어요.</p>`;}
       return;
     }
     if(hp===0||!a.cur){
@@ -2077,7 +2067,7 @@ function StudentBattle(){
     }
     if(shownK!==a.cur.k){shownK=a.cur.k;phase="q";question(a.cur);}
   }
-  function feedback(hit,crit,p,given,mon,next){
+  function feedback(hit,crit,p,given,mon,next,hs){
     phase="fb";const mn=esc(nameOf(mon));
     const nx=next&&next!==mon?`<p class="sub">다음은 ${esc(nameOf(next))}의 차례!</p>`:"";
     if(hit){
@@ -2085,7 +2075,7 @@ function StudentBattle(){
       R.pad.innerHTML='<p class="sub">다음 문제가 나와요…</p>';
       fbTimer=setTimeout(()=>{phase=null;render();},1100);
     }else{
-      R.msg.innerHTML=`<p class="q">${mn}의 공격은 <b class="bad">빗나갔다!</b> ${esc(josa(nameOf(mon),"은","는"))} 기절했다…</p><p class="sub">정답: ${answerHTML(p)}${given?` (내 답: ${rich(given)})`:""}</p>${next?nx:""}`;
+      R.msg.innerHTML=`<p class="q">${mn}의 공격은 <b class="bad">빗나갔다!</b> 하트를 1개 잃었어요. <span class="hearts">${hearts({hearts:hs,maxHearts:mine().maxHearts})}</span></p><p class="sub">정답: ${answerHTML(p)}${given?` (내 답: ${rich(given)})`:""}</p>${next?nx:""}`;
       R.pad.innerHTML='<button class="btn blue big" data-act="key" data-k="go" disabled>3초 뒤에 다음 문제</button>';
       let n=3;const b=R.pad.querySelector("button");
       fbTimer=setInterval(()=>{n--;if(!b.isConnected)return clearInterval(fbTimer);
@@ -2146,23 +2136,20 @@ function StudentBattle(){
       }
       const mon=a.mon,st=meSt(),pw=power(st,mon),crit=hit&&Math.random()<(pw.total||pw.bonus||0)/10000;
       const dmg=hit?(crit?2:1):0;
-      // 다음에 공격할 포켓몬: 기절하지 않은 포켓몬 중 다음 차례
-      const team=teamOf(a),f=faintSet(st);if(!hit)f.add(mon);
-      let next=null;const i0=team.indexOf(mon);
-      for(let i=1;i<=team.length;i++){const c=team[(i0+i)%team.length];if(!f.has(c)){next=c;break;}}
+      // 틀리면 하트가 1개 줄어요. 다음 차례 포켓몬으로 바뀌어요.
+      const team=teamOf(a),hs=hit?(a.hearts||0):Math.max(0,(a.hearts||0)-1);
+      const next=hs>0?team[(team.indexOf(mon)+1)%team.length]:null;
       phase="anim";R.pad.innerHTML="";
       R.msg.innerHTML=`<p class="q">${esc(nameOf(mon))}의 공격!</p>`;
       restart(R.me,"lunge");restart(R.foe,hit?"hurt":"dodge");setTimeout(()=>Snd.sfx(hit?"hit":"miss"),250);
       if(crit){setTimeout(()=>{critFx(R.foe.parentElement);restart(R.me,"lunge");restart(R.foe,"hurt");},650);setTimeout(()=>Snd.sfx("hit"),900);}
-      if(!hit)setTimeout(()=>{if(R.me.isConnected)R.me.classList.add("fainted");},700);
       const ap=`attempts/r${raid}/${S.sid}/`;
       const upd={[ap+"hits"]:(a.hits||0)+dmg,[ap+"ok"]:(a.ok||0)+(hit?1:0),[ap+"ng"]:(a.ng||0)+(hit?0:1),[ap+"crit"]:(a.crit||0)+(crit?1:0),
         [ap+"last"]:{at:Date.now(),hit,crit,mon},[ap+"cur"]:next&&hp-dmg>0?{...makeProblem(meta.units),k:p.k+1}:null,
-        [ap+"mon"]:next||mon,[ap+`log/q${p.k}`]:{u:p.u||"dec",ok:hit,mon}};
-      if(!hit)upd[`students/${S.sid}/fainted/p${mon}`]=true;
+        [ap+"mon"]:next||mon,[ap+`log/q${p.k}`]:{u:p.u||"dec",ok:hit,mon},[ap+"hearts"]:hs,[ap+"fainted"]:hs<=0};
       try{await Store.update("rooms/"+S.code,upd);}
       catch(e){phase="q";question(p);toast("저장하지 못했어요. 다시 공격해 주세요.");return;}
-      setTimeout(()=>{if(R.msg.isConnected)feedback(hit,crit,p,given,mon,next);},crit?1500:900);
+      setTimeout(()=>{if(R.msg.isConnected)feedback(hit,crit,p,given,mon,next,hs);},crit?1500:900);
     }
   };
 }
@@ -2221,7 +2208,7 @@ function StudentResult(){let R,shown=false;return{mount(m){
     if(s.prev!=null&&n>=3)html+=`<p class="hint">지난 레이드 정확도 ${pct(s.prev)} → 이번 ${pct(acc)} ${acc>s.prev+1e-9?"▲ 올랐어요!":acc<s.prev-1e-9?"▼":""}</p>`;
     if(a){const fs=faintSet(students[S.sid]),ko=(arr(a.team).length?arr(a.team):[a.mon]).filter(x=>fs.has(x));
       html+=`<p class="hint">남은 하트 ${a.hearts||0}개${a.crit?`, 크리티컬 ${a.crit}번`:""}</p>`;
-      if(ko.length)html+=`<p class="hint">기절한 포켓몬: ${ko.map(nameOf).join(", ")} (기력의 덩어리로 깨울 수 있어요)</p>`;}}
+}}
   else html+=`<p class="mt">${parts[S.sid]?"이번 레이드에는 문제를 풀지 못했어요.":"이번 레이드에는 참여하지 않았어요."}</p>`;
   const g=[];
   if(w.legend)g.push(`<div class="gift${w.shiny?" shiny":""}">${spr(x.boss,false,w.shiny)}<b>${w.shiny?"✨ 이로치 ":""}${esc(nameOf(x.boss))}</b><span>${x.legendN}문제 이상 맞혀서 받았어요!</span></div>`);
@@ -2260,7 +2247,7 @@ function TeacherGrowth(){
       const done=all.filter(([,g])=>g.status!=="pending").sort((a,b)=>(b[1].decided||0)-(a[1].decided||0)).slice(0,40);
       R.pc.textContent=`${pend.length}개`;
       setHTML(R.pend,pend.length?pend.map(([gid,g])=>{
-        const rw=T.rw[gid]||(T.rw[gid]={atk:0,deco:0,evo:0,revive:0,egg:0}),tot=Object.values(rw).reduce((a,b)=>a+b,0);
+        const rw=T.rw[gid]||(T.rw[gid]={atk:0,deco:0,evo:0,egg:0}),tot=Object.values(rw).reduce((a,b)=>a+b,0);
         return `<div class="gcard"><div class="gmeta"><b>${g.num}번 ${esc(g.name)}</b> <span class="tag2">${esc(g.cat)}</span> <span class="hint">${esc(g.date)}</span></div>
           <p class="gtext">${esc(g.text)}</p>
           <div class="rw">${Object.entries(GIFTS).map(([k,it])=>`<span class="rwi">${itemIcon(k,28)} ${it.n}
@@ -2322,7 +2309,7 @@ const ACT={
   pickBoss(b){T.boss=+b.dataset.id;document.querySelectorAll(".bossgrid button").forEach(x=>x.setAttribute("aria-pressed",String(+x.dataset.id===T.boss)));cur.v.boss&&cur.v.boss();},
   hpStep(b){T.hp=Math.min(99,Math.max(1,T.hp+(+b.dataset.d)));$("#hpIn").value=T.hp;},
   hpAll(){const n=sorted(D().students).filter(([k,s])=>isOnline(k)&&aliveMons(s).length).length;T.hp=Math.max(1,Math.min(99,n*3));$("#hpIn").value=T.hp;},
-  heartStep(b){T.hearts=Math.max(1,Math.min(5,T.hearts+(+b.dataset.d)));cur.v.update();},
+  heartStep(b){T.hearts=Math.max(1,Math.min(10,T.hearts+(+b.dataset.d)));cur.v.update();},
   async bossAtk(){
     const {meta,hp}=D();if(meta.stage!=="raid")return;
     if(hp<=0)return toast("전설의 포켓몬이 이미 지쳐 있어요.");
@@ -2335,7 +2322,7 @@ const ACT={
     const {meta,students}=D();const parts={};
     sorted(students).forEach(([k,s])=>{if(isOnline(k)&&aliveMons(s).length)parts[k]=true;});
     const n=Object.keys(parts).length;
-    if(!n)return toast("접속해 있고 기절하지 않은 포켓몬이 있는 학생이 없어요.");
+    if(!n)return toast("접속해 있고 포켓몬이 있는 학생이 없어요.");
     await Store.update(`rooms/${S.code}/meta`,{stage:"raid",raidNo:(meta.raidNo||0)+1,boss:T.boss,maxHp:T.hp,units:T.units,participants:parts,result:null,
       hearts:T.hearts,atkEvery:T.atkEvery,atkTime:T.atkTime,legendN:T.legendN,bossAtk:null,startedAt:Date.now()});
   },
@@ -2437,15 +2424,14 @@ const ACT={
     toast("선생님께 보냈어요!");
   },
   useItem(b){openUse(b.dataset.k);},
-  useOn(b){const id=+b.dataset.id;if(b.dataset.k==="atk"){if(confirm(`${nameOf(id)}에게 파워 사탕을 줄까요?`))useAtk(id);}
-    else if(b.dataset.k==="revive")useRevive(id);else chooseEvo(id);},
+  useOn(b){const id=+b.dataset.id;if(b.dataset.k==="atk"){if(confirm(`${nameOf(id)}에게 파워 사탕을 줄까요?`))useAtk(id);} else chooseEvo(id);},
   teamToggle(b){const id=+b.dataset.id;if(S.team.includes(id))S.team=S.team.filter(x=>x!==id);else{if(S.team.length>=6)return toast("최대 6마리까지 고를 수 있어요.");S.team=[...S.team,id];}cur.v.update();},
   teamGo(){createAttempt(S.team.slice());},
   evoTo(b){evolve(+b.dataset.from,+b.dataset.to);},
   rw(b){const r=T.rw[b.dataset.g];if(!r)return;r[b.dataset.k]=Math.max(0,Math.min(5,r[b.dataset.k]+(+b.dataset.d)));cur.v.update();},
   async gok(b){
     const gid=b.dataset.g,{room,students}=D(),g=(room.growth||{})[gid];if(!g)return;
-    const rw=T.rw[gid]||{atk:0,deco:0,evo:0,revive:0,egg:0},st=students[g.sid],it=(st&&st.items)||{};
+    const rw=T.rw[gid]||{atk:0,deco:0,evo:0,egg:0},st=students[g.sid],it=(st&&st.items)||{};
     const upd={[`growth/${gid}/status`]:"approved",[`growth/${gid}/reward`]:rw,[`growth/${gid}/decided`]:Date.now()};
     if(st)for(const k of Object.keys(ITEMS))if(rw[k])upd[`students/${g.sid}/items/${k}`]=(it[k]||0)+rw[k];
     if(st)for(let i=0;i<(rw.egg||0);i++)upd[`students/${g.sid}/eggs/g${gid}${i}`]={got:D().meta.raidNo||0};
