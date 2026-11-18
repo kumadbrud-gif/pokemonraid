@@ -114,7 +114,7 @@ main{max-width:1180px;margin:0 auto;padding:12px 14px 48px}
 .lunge{animation:lunge .5s steps(6)}
 .hurt{animation:hurt .8s steps(8) .25s}
 .dodge{animation:dodge .5s steps(5) .2s}
-.fainted img{filter:grayscale(1);opacity:.5}
+.dim img,.fainted img{filter:grayscale(1);opacity:.5}
 
 /* 포켓몬 목록 */
 .mons{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px}
@@ -329,6 +329,9 @@ textarea{font:inherit;border:3px solid var(--ink);border-radius:6px;padding:8px 
 .itemi{image-rendering:pixelated;image-rendering:crisp-edges;vertical-align:middle;object-fit:contain}
 .icard .ie{height:72px;display:flex;align-items:center;justify-content:center}
 .gift .ge{height:96px;display:flex;align-items:center;justify-content:center}
+.timer{font-size:1.1rem;margin:4px 0}
+.timer.bad,.stimer.bad{color:#e84838}
+.stimer{font-weight:normal}
 /* 결과 */
 .result{text-align:center;padding:28px 18px;max-width:680px;margin:0 auto}
 .result .rspr img{width:min(60vw,288px);height:auto;aspect-ratio:1}
@@ -507,9 +510,9 @@ const TPL=[
   ["-","kg",(a,b)=>`트레이너의 가방은 ${a} kg입니다. 가방에서 짐을 ${b} kg만큼 꺼내면 가방은 몇 kg이 될까요?`],
   ["-","m",(a,b)=>`높이가 ${a} m인 나무와 ${b} m인 나무가 있습니다. 두 나무의 높이 차이는 몇 m일까요?`]
 ];
-function makeNum(){ // 0.1 ~ 9.99, 자연수는 나오지 않게
-  if(Math.random()<0.6){let v;do{v=rnd(10,999);}while(v%10===0);return v;}
-  let v;do{v=rnd(1,99)*10;}while(v%100===0);return v;
+function makeNum(){ // 쉬운 소수: 대부분 소수 한 자리, 가끔 두 자리 (0.1 ~ 5.9)
+  if(Math.random()<0.7){let v;do{v=rnd(1,59)*10;}while(v%100===0);return v;}
+  let v;do{v=rnd(10,399);}while(v%10===0);return v;
 }
 function fmt(x){return (x/100).toFixed(2).replace(/\.?0+$/,"");}
 
@@ -524,57 +527,43 @@ function C(text,right,wrongs){const ch=shuffle([right,...wrongs]);return {type:"
 const F=(t,d)=>{const w=Math.floor(t/d),n=t%d;return n?`{{${w||""}|${n}|${d}}}`:String(w);};
 
 function genFrac(){
-  const d=rnd(3,12),prop=()=>rnd(1,d-1),mixed=()=>rnd(1,4)*d+rnd(1,d-1);
-  const T=[
-    ["+","L",(a,b)=>`우유를 어제 ${a} L, 오늘 ${b} L 마셨습니다. 이틀 동안 마신 우유는 모두 몇 L일까요?`],
+  // 분모 3~9, 받아올림·받아내림이 없는 쉬운 계산
+  const d=rnd(3,9),T=[
+    ["+","L",(a,b)=>`우유를 어제 ${a} L, 오늘 ${b} L 마셨습니다. 모두 몇 L 마셨을까요?`],
     ["+","m",(a,b)=>`빨간 리본 ${a} m와 파란 리본 ${b} m가 있습니다. 리본은 모두 몇 m일까요?`],
-    ["+","kg",(a,b)=>`밀가루 ${a} kg과 설탕 ${b} kg을 섞었습니다. 섞은 가루는 모두 몇 kg일까요?`],
-    ["+","시간",(a,b)=>`민서는 어제 ${a} 시간, 오늘 ${b} 시간 동안 책을 읽었습니다. 모두 몇 시간 읽었을까요?`],
-    ["+","km",(a,b)=>`트레이너가 오전에 ${a} km, 오후에 ${b} km를 걸었습니다. 모두 몇 km를 걸었을까요?`],
+    ["+","kg",(a,b)=>`밀가루 ${a} kg과 설탕 ${b} kg을 섞었습니다. 모두 몇 kg일까요?`],
+    ["+","시간",(a,b)=>`책을 어제 ${a} 시간, 오늘 ${b} 시간 읽었습니다. 모두 몇 시간 읽었을까요?`],
     ["-","L",(a,b)=>`물 ${a} L 중에서 ${b} L를 마셨습니다. 남은 물은 몇 L일까요?`],
-    ["-","m",(a,b)=>`철사 ${a} m 중에서 ${b} m를 사용했습니다. 남은 철사는 몇 m일까요?`],
-    ["-","kg",(a,b)=>`감자 ${a} kg 중에서 ${b} kg으로 요리를 했습니다. 남은 감자는 몇 kg일까요?`],
-    ["-","m",(a,b)=>`빨간 끈은 ${a} m, 파란 끈은 ${b} m입니다. 빨간 끈은 파란 끈보다 몇 m 더 길까요?`],
-    ["-","시간",(a,b)=>`숙제를 ${a} 시간 하기로 했습니다. ${b} 시간 했다면 앞으로 몇 시간 더 해야 할까요?`]
+    ["-","m",(a,b)=>`철사 ${a} m 중에서 ${b} m를 썼습니다. 남은 철사는 몇 m일까요?`],
+    ["-","kg",(a,b)=>`감자 ${a} kg 중에서 ${b} kg을 먹었습니다. 남은 감자는 몇 kg일까요?`]
   ];
-  const [op,unit,f]=pick(T);let a,b;
-  if(op==="+"){a=Math.random()<.5?prop():mixed();b=Math.random()<.5?prop():mixed();}
-  else{const r=Math.random();
-    if(r<.25){a=rnd(2,5)*d;b=Math.random()<.5?prop():rnd(1,a/d-1)*d+rnd(1,d-1);}
-    else{do{a=Math.random()<.3?prop():mixed();b=Math.random()<.5?prop():mixed();}while(a<=b);}}
+  const [op,unit,f]=pick(T);const mixed=Math.random()<.35;let a,b;
+  if(op==="+"){const n1=rnd(1,d-2),n2=rnd(1,d-1-n1);
+    if(mixed){a=rnd(1,3)*d+n1;b=rnd(0,2)*d+n2;}else{a=n1;b=n2;}}
+  else{const n1=rnd(2,d-1),n2=rnd(1,n1-1);
+    if(mixed){const w1=rnd(1,4),w2=rnd(0,w1);a=w1*d+n1;b=w2*d+n2;}else{a=n1;b=n2;}}
   return {type:"frac",text:f(F(a,d),F(b,d)),ans:{n:op==="+"?a+b:a-b,d},unit};
 }
 function genTri(){
-  const g=rnd(0,6);
-  if(g===0){const x=rnd(4,16)*5;return {text:`이등변삼각형에서 크기가 같은 두 각이 각각 ${x}°입니다. 나머지 한 각은 몇 도일까요?`,...N(180-2*x,"°")};}
-  if(g===1){const t=rnd(2,16)*10;return {text:`이등변삼각형에서 길이가 같은 두 변 사이의 각이 ${t}°입니다. 나머지 두 각 중 한 각은 몇 도일까요?`,...N((180-t)/2,"°")};}
-  if(g===2){const a=rnd(4,15),b=rnd(3,14);return {text:`길이가 같은 두 변이 각각 ${a} cm이고 나머지 한 변이 ${b} cm인 이등변삼각형이 있습니다. 세 변의 길이의 합은 몇 cm일까요?`,...N(2*a+b,"cm")};}
-  if(g===3){const a=rnd(4,15),b=rnd(3,14);return {text:`세 변의 길이의 합이 ${2*a+b} cm인 이등변삼각형이 있습니다. 한 변이 ${b} cm이고 나머지 두 변의 길이가 같다면, 길이가 같은 한 변은 몇 cm일까요?`,...N(a,"cm")};}
-  if(g===4){const s=rnd(3,16);return {text:`한 변이 ${s} cm인 정삼각형이 있습니다. 세 변의 길이의 합은 몇 cm일까요?`,...N(3*s,"cm")};}
-  if(g===5){const s=rnd(3,16);return {text:`세 변의 길이의 합이 ${3*s} cm인 정삼각형이 있습니다. 한 변은 몇 cm일까요?`,...N(s,"cm")};}
-  if(g===6){const kind=rnd(0,2);let a,b,c;
-    do{a=rnd(2,14)*5;b=rnd(2,14)*5;c=180-a-b;}while(c<=0||(kind===0&&Math.max(a,b,c)>=90)||(kind===1&&a!==90&&b!==90&&c!==90)||(kind===2&&Math.max(a,b,c)<=90));
-    if(kind===1&&c!==90){a=90;b=180-90-c;}
-    const right=["예각삼각형","직각삼각형","둔각삼각형"][kind];
-    return C(`두 각의 크기가 ${a}°, ${b}°인 삼각형이 있습니다. 이 삼각형은 어떤 삼각형일까요?`,right,["예각삼각형","직각삼각형","둔각삼각형"].filter(x=>x!==right));}
+  const g=rnd(0,4);
+  if(g===0){const x=pick([30,40,50,60,70,80]);return {text:`이등변삼각형에서 크기가 같은 두 각이 각각 ${x}°입니다. 나머지 한 각은 몇 도일까요?`,...N(180-2*x,"°")};}
+  if(g===1){const a=rnd(3,9),b=rnd(2,8);return {text:`길이가 같은 두 변이 각각 ${a} cm이고 나머지 한 변이 ${b} cm인 이등변삼각형이 있습니다. 세 변의 길이의 합은 몇 cm일까요?`,...N(2*a+b,"cm")};}
+  if(g===2){const s=rnd(2,9);return {text:`한 변이 ${s} cm인 정삼각형이 있습니다. 세 변의 길이의 합은 몇 cm일까요?`,...N(3*s,"cm")};}
+  if(g===3)return C("정삼각형의 한 각은 몇 도일까요?","60°",["45°","90°","30°"]);
+  const kind=rnd(0,2),q=[["세 각이 모두 예각인 삼각형은 무엇일까요?","예각삼각형"],["한 각이 직각인 삼각형은 무엇일까요?","직각삼각형"],["한 각이 둔각인 삼각형은 무엇일까요?","둔각삼각형"]][kind];
+  return C(q[0],q[1],["예각삼각형","직각삼각형","둔각삼각형","정삼각형"].filter(x=>x!==q[1]));
 }
 function genQuad(){
-  const g=rnd(0,7),Q=["사다리꼴","평행사변형","마름모","직사각형","정사각형"];
-  if(g===0){const x=rnd(7,32)*5;return {text:`평행사변형에서 한 각이 ${x}°입니다. 이 각과 이웃한 각은 몇 도일까요?`,...N(180-x,"°")};}
-  if(g===1){const x=rnd(7,32)*5;return {text:`마름모에서 한 각이 ${x}°입니다. 이 각과 이웃한 각은 몇 도일까요?`,...N(180-x,"°")};}
-  if(g===2){const s=rnd(3,16);return {text:`한 변이 ${s} cm인 마름모가 있습니다. 네 변의 길이의 합은 몇 cm일까요?`,...N(4*s,"cm")};}
-  if(g===3){const a=rnd(4,15),b=rnd(3,14);return {text:`평행사변형의 이웃한 두 변이 ${a} cm, ${b} cm입니다. 네 변의 길이의 합은 몇 cm일까요?`,...N(2*(a+b),"cm")};}
-  if(g===4){const a=rnd(4,15),b=rnd(3,14);return {text:`네 변의 길이의 합이 ${2*(a+b)} cm인 평행사변형이 있습니다. 한 변이 ${a} cm라면 이웃한 변은 몇 cm일까요?`,...N(b,"cm")};}
-  if(g===5){let a,b,c;do{a=rnd(12,30)*5;b=rnd(8,30)*5;c=rnd(8,30)*5;}while(360-a-b-c<=20||360-a-b-c>=170);
-    return {text:`사각형의 세 각이 ${a}°, ${b}°, ${c}°입니다. 나머지 한 각은 몇 도일까요?`,...N(360-a-b-c,"°")};}
-  if(g===6){const a=rnd(2,12),b=rnd(2,12);return {text:`직선 가, 나, 다가 서로 평행하고 직선 나는 가와 다 사이에 있습니다. 가와 나 사이의 거리는 ${a} cm, 나와 다 사이의 거리는 ${b} cm입니다. 가와 다 사이의 거리는 몇 cm일까요?`,...N(a+b,"cm")};}
+  const g=rnd(0,3),Q=["사다리꼴","평행사변형","마름모","직사각형","정사각형"];
+  if(g===0){const x=pick([60,70,80,100,110,120]);return {text:`평행사변형에서 한 각이 ${x}°입니다. 이 각과 이웃한 각은 몇 도일까요?`,...N(180-x,"°")};}
+  if(g===1){const s=rnd(2,9);return {text:`한 변이 ${s} cm인 마름모가 있습니다. 네 변의 길이의 합은 몇 cm일까요?`,...N(4*s,"cm")};}
+  if(g===2){const a=rnd(3,9),b=rnd(2,8);return {text:`평행사변형의 이웃한 두 변이 ${a} cm, ${b} cm입니다. 네 변의 길이의 합은 몇 cm일까요?`,...N(2*(a+b),"cm")};}
   const q=pick([
-    ["평행한 변이 한 쌍이라도 있는 사각형을 무엇이라고 할까요?","사다리꼴",Q],
-    ["마주 보는 두 쌍의 변이 서로 평행한 사각형을 무엇이라고 할까요?","평행사변형",Q],
-    ["네 변의 길이가 모두 같은 사각형을 무엇이라고 할까요?","마름모",Q],
-    ["두 직선이 만나서 이루는 각이 직각일 때, 두 직선은 서로 무엇이라고 할까요?","수직",["수직","평행","수선","대각선"]],
-    ["서로 만나지 않는 두 직선을 무엇이라고 할까요?","평행선",["평행선","수선","대각선","꺾은선"]],
-    ["평행선 사이의 수선의 길이를 무엇이라고 할까요?","평행선 사이의 거리",["평행선 사이의 거리","대각선","둘레","높이 차"]]]);
+    ["평행한 변이 한 쌍이라도 있는 사각형은 무엇일까요?","사다리꼴",Q],
+    ["마주 보는 두 쌍의 변이 서로 평행한 사각형은 무엇일까요?","평행사변형",Q],
+    ["네 변의 길이가 모두 같은 사각형은 무엇일까요?","마름모",Q],
+    ["두 직선이 만나서 직각을 이룰 때, 두 직선은 서로 무엇일까요?","수직",["수직","평행","대각선","꺾은선"]],
+    ["서로 만나지 않는 두 직선을 무엇이라고 할까요?","평행선",["평행선","수선","대각선","꺾은선"]]]);
   return C(q[0],q[1],q[2].filter(x=>x!==q[1]).slice(0,3));
 }
 function makeGraph(){
@@ -583,7 +572,7 @@ function makeGraph(){
     const g=temp?{title:"하루 동안의 기온",unit:"°C",labels:["8시","9시","10시","11시","12시"],hours:[8,9,10,11,12]}
       :{title:"강낭콩의 키",unit:"cm",labels:["월요일","화요일","수요일","목요일","금요일"]};
     const v=[temp?rnd(8,16):rnd(2,8)];
-    for(let i=1;i<5;i++)v.push(v[i-1]+(temp?pick([-2,-1,1,2,3,4]):rnd(1,4)));
+    for(let i=1;i<5;i++)v.push(v[i-1]+(temp?pick([-2,-1,1,2,3]):rnd(1,3)));
     const lo=Math.min(...v),hi=Math.max(...v);if(hi-lo>11)continue;
     g.values=v;g.yMin=Math.max(0,lo-1);g.yMax=hi+1;
     const diffs=v.slice(1).map((x,i)=>x-v[i]),ad=diffs.map(Math.abs),mx=Math.max(...ad);
@@ -591,21 +580,16 @@ function makeGraph(){
     const qs=[];
     const i=rnd(0,4);qs.push({text:`${josa(g.title,"을","를")} 나타낸 꺾은선그래프입니다. ${g.labels[i]}${temp?"의 기온은":"의 키는"} 몇 ${g.unit}일까요?`,...N(v[i],g.unit)});
     const j=rnd(0,3);qs.push({text:`${josa(g.title,"을","를")} 나타낸 꺾은선그래프입니다. ${g.labels[j]}부터 ${g.labels[j+1]}까지 ${temp?"기온은":"키는"} 몇 ${g.unit} ${diffs[j]>=0?(temp?"올랐을까요":"자랐을까요"):"내려갔을까요"}?`,...N(Math.abs(diffs[j]),g.unit)});
-    qs.push({text:`${josa(g.title,"을","를")} 나타낸 꺾은선그래프입니다. 가장 ${temp?"높았을":"컸을"} 때와 가장 ${temp?"낮았을":"작았을"} 때의 차는 몇 ${g.unit}일까요?`,...N(hi-lo,g.unit)});
-    if(ad.filter(x=>x===mx).length===1)qs.push(C(`${josa(g.title,"을","를")} 나타낸 꺾은선그래프입니다. ${temp?"기온의 변화가":"키가"} 가장 ${temp?"큰":"많이 자란"} 때는 언제일까요?`,iv[ad.indexOf(mx)],iv.filter((_,k)=>k!==ad.indexOf(mx))));
     if(temp&&v.filter(x=>x===hi).length===1)qs.push({text:`${josa(g.title,"을","를")} 나타낸 꺾은선그래프입니다. 기온이 가장 높았던 때는 몇 시일까요?`,...N(g.hours[v.indexOf(hi)],"시")});
     const p=pick(qs);p.graph={title:g.title,unit:g.unit,labels:g.labels,values:v,yMin:g.yMin,yMax:g.yMax};return p;
   }
 }
 const PN={3:"정삼각형",4:"정사각형",5:"정오각형",6:"정육각형",7:"정칠각형",8:"정팔각형",9:"정구각형",10:"정십각형"};
 function genPoly(){
-  const g=rnd(0,5);
-  if(g===0){const n=rnd(3,10),s=rnd(2,12);return {text:`한 변이 ${s} cm인 ${PN[n]}이 있습니다. 모든 변의 길이의 합은 몇 cm일까요?`,...N(n*s,"cm")};}
-  if(g===1){const n=rnd(3,10),s=rnd(2,12);return {text:`모든 변의 길이의 합이 ${n*s} cm인 ${PN[n]}이 있습니다. 한 변은 몇 cm일까요?`,...N(s,"cm")};}
-  if(g===2){const n=pick([4,5,6]);return {text:`${PN[n].slice(1)}에 그을 수 있는 대각선은 모두 몇 개일까요?`,...N(n*(n-3)/2,"개")};}
-  if(g===3){const n=rnd(5,10);return C(`변이 ${n}개이고, 변의 길이와 각의 크기가 모두 같은 다각형의 이름은 무엇일까요?`,PN[n],shuffle(Object.values(PN).filter(x=>x!==PN[n])).slice(0,3));}
-  if(g===4){const n=rnd(3,8),s=rnd(2,9),m=rnd(3,8);return {text:`한 변이 ${s} cm인 ${PN[n]}과 한 변이 ${s} cm인 ${PN[m]}이 있습니다. 두 도형의 모든 변의 길이의 합은 몇 cm일까요?`,...N((n+m)*s,"cm")};}
-  return C(pick(["두 대각선의 길이가 같고, 서로 수직으로 만나는 사각형은 무엇일까요?"]),"정사각형",["마름모","평행사변형","사다리꼴"]);
+  const g=rnd(0,2);
+  if(g===0){const n=rnd(3,6),s=rnd(2,9);return {text:`한 변이 ${s} cm인 ${PN[n]}이 있습니다. 모든 변의 길이의 합은 몇 cm일까요?`,...N(n*s,"cm")};}
+  if(g===1){const n=rnd(3,8);return C(`변이 ${n}개이고, 변의 길이와 각의 크기가 모두 같은 다각형은 무엇일까요?`,PN[n],shuffle(Object.values(PN).filter(x=>x!==PN[n])).slice(0,3));}
+  return {text:"사각형에 그을 수 있는 대각선은 모두 몇 개일까요?",...N(2,"개")};
 }
 function makeProblem(units){
   const u=pick((units&&arr(units).length?arr(units):["dec"]).filter(k=>UNITS[k]));
@@ -761,7 +745,7 @@ function homeBar(){setHTML(bar,`<span class="sp"></span>${sndBtn()}`);}
 
 /* ---------------- 상태와 화면 전환 ---------------- */
 const S={role:null,code:null,sid:null,room:null,unsub:null,user:null,creating:null,pending:null,page:"hub",ack:null,gcat:null,gdraft:"",dexGen:0};
-const T={boss:null,hp:null,seen:null,queue:[],playing:false,sel:new Set(),grant:null,page:null,rw:{},units:null,hearts:null,atkEvery:null,atkTime:null,legendN:null,lastTrig:0};
+const T={boss:null,hp:null,seen:null,queue:[],playing:false,sel:new Set(),grant:null,page:null,rw:{},units:null,hearts:null,atkEvery:null,atkTime:null,legendN:null,raidMin:null,lastTrig:0,ending:false};
 const main=$("#main"),bar=$("#bar"),modal=$("#modal");
 let cur={key:null,v:null};
 function show(key,make){
@@ -817,7 +801,7 @@ function exitRoom(){
   S.unsub&&S.unsub();S.unsub=null;stopPresence();
   if(S.role==="teacher")sessionStorage.removeItem("pkraid-teacher");else if(S.role)ls().removeItem("pkraid-lastroom");
   Object.assign(S,{role:null,code:null,sid:null,room:null,creating:null,page:"hub",ack:null});
-  Object.assign(T,{boss:null,hp:null,seen:null,queue:[],playing:false,sel:new Set(),grant:null,page:null,rw:{},units:null,hearts:null,atkEvery:null,atkTime:null,legendN:null,lastTrig:0});
+  Object.assign(T,{boss:null,hp:null,seen:null,queue:[],playing:false,sel:new Set(),grant:null,page:null,rw:{},units:null,hearts:null,atkEvery:null,atkTime:null,legendN:null,raidMin:null,lastTrig:0,ending:false});
   modal.hidden=true;modal.innerHTML="";
   if(S.user)show("lobby",StudentLobby);else show("home",HomeView);
 }
@@ -889,22 +873,27 @@ function resultHTML(extra){
 
 /* ---------------- 포켓몬 정보 (공격력, 진화) ----------------
    공격력 = 종족값 합계. 진화 정보와 종족값은 PokeAPI 자료를 불러와서 이 기기에 저장해 둬요. */
-const GD={bst:{},children:{},ready:false,failed:false};
-function applyGD(d){GD.bst=d.bst;GD.children={};for(const[c,p]of Object.entries(d.par))(GD.children[p]=GD.children[p]||[]).push(+c);GD.ready=true;}
+const GD={bst:{},children:{},leg:new Set(),ready:false,failed:false};
+/* 전설·환상·울트라비스트 등: 알에서 절대 나오지 않아요 (레이드로만 얻어요) */
+const NO_EGG=new Set([144,145,146,150,151,243,244,245,249,250,251,377,378,379,380,381,382,383,384,385,386,
+  480,481,482,483,484,485,486,487,488,489,490,491,492,493,494,638,639,640,641,642,643,644,645,646,647,648,649,
+  716,717,718,719,720,721,772,773,785,786,787,788,789,790,791,792,793,794,795,796,797,798,799,800,801,802,803,804,805,806,807,808,809,
+  888,889,890,891,892,893,894,895,896,897,898,905,1001,1002,1003,1004,1007,1008,1009,1010,1014,1015,1016,1017,1020,1021,1022,1023,1024,1025]);
+function applyGD(d){GD.bst=d.bst;GD.children={};GD.par=d.par||{};GD.leg=new Set(d.leg||[]);for(const[c,p]of Object.entries(d.par))(GD.children[p]=GD.children[p]||[]).push(+c);GD.ready=true;}
 async function loadGameData(){
-  let cached=null;try{cached=JSON.parse(localStorage.getItem("pkraid-gd1"));}catch(e){}
+  let cached=null;try{cached=JSON.parse(localStorage.getItem("pkraid-gd2"));}catch(e){}
   if(cached&&cached.bst){applyGD(cached);if(Date.now()-cached.at<7*864e5)return;}
   try{
     const base="https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/";
     const [sp,stt]=await Promise.all(["pokemon_species.csv","pokemon_stats.csv"].map(f=>fetch(base+f).then(r=>{if(!r.ok)throw new Error(f);return r.text();})));
-    const par={},bst={};
-    const L1=sp.trim().split("\n"),h1=L1[0].trim().split(","),iI=h1.indexOf("id"),iP=h1.indexOf("evolves_from_species_id");
-    for(const l of L1.slice(1)){const c=l.split(",");const p=+c[iP];if(p)par[+c[iI]]=p;}
+    const par={},bst={},leg=[];
+    const L1=sp.trim().split("\n"),h1=L1[0].trim().split(","),iI=h1.indexOf("id"),iP=h1.indexOf("evolves_from_species_id"),iL=h1.indexOf("is_legendary"),iM=h1.indexOf("is_mythical");
+    for(const l of L1.slice(1)){const c=l.split(",");const p=+c[iP];if(p)par[+c[iI]]=p;if(c[iL]==="1"||c[iM]==="1")leg.push(+c[iI]);}
     const L2=stt.trim().split("\n"),h2=L2[0].trim().split(","),jI=h2.indexOf("pokemon_id"),jB=h2.indexOf("base_stat");
     for(const l of L2.slice(1)){const c=l.split(",");const id=+c[jI];if(id>0&&id<10000)bst[id]=(bst[id]||0)+(+c[jB]||0);}
     if(Object.keys(bst).length<400||Object.keys(par).length<100)throw new Error("data");
-    const d={bst,par,at:Date.now()};applyGD(d);
-    try{localStorage.setItem("pkraid-gd1",JSON.stringify(d));}catch(e){}
+    const d={bst,par,leg,at:Date.now()};applyGD(d);
+    try{localStorage.setItem("pkraid-gd2",JSON.stringify(d));}catch(e){}
   }catch(e){if(!GD.ready)GD.failed=true;}
   if(S.role)render();
 }
@@ -1461,6 +1450,7 @@ function TeacherSetup(){
       if(T.hp==null)T.hp=meta.maxHp||10;
       if(T.units==null)T.units=arr(meta.units).length?arr(meta.units):["dec"];
       if(T.hearts==null)T.hearts=meta.hearts||5;
+      if(T.raidMin==null||T.raidMin<1||T.raidMin>10)T.raidMin=meta.raidMin>=1&&meta.raidMin<=10?meta.raidMin:5;
       if(T.legendN==null)T.legendN=meta.legendN!=null?meta.legendN:10;
       if(T.atkEvery==null)T.atkEvery=meta.atkEvery!=null?meta.atkEvery:120;
       if(T.atkTime==null)T.atkTime=meta.atkTime||10;
@@ -1477,9 +1467,9 @@ function TeacherSetup(){
             <div class="chips2 units" data-r="units"></div>
             <label class="lbl" for="hpIn">모두 합쳐 몇 번 맞히면 잡을까요?</label>
             <p class="hint">지금 접속해 있고 포켓몬이 있는 학생만 참여해요. 학생마다 하트가 남아 있는 동안 문제를 계속 풀 수 있고, 맞힌 횟수를 모두 더해요. 크리티컬은 2번으로 세요.</p>
-            <div class="stepper"><button class="btn small" data-act="hpStep" data-d="-1" aria-label="줄이기">−</button>
-              <input id="hpIn" type="number" min="1" max="99" inputmode="numeric" value="${T.hp}">
-              <button class="btn small" data-act="hpStep" data-d="1" aria-label="늘리기">+</button>
+            <div class="stepper"><button class="btn small" data-act="hpStep" data-d="-10" aria-label="10 줄이기">−10</button><button class="btn small" data-act="hpStep" data-d="-1" aria-label="줄이기">−</button>
+              <input id="hpIn" type="number" min="1" max="999" inputmode="numeric" value="${T.hp}">
+              <button class="btn small" data-act="hpStep" data-d="1" aria-label="늘리기">+</button><button class="btn small" data-act="hpStep" data-d="10" aria-label="10 늘리기">+10</button>
               <button class="btn small" data-act="hpAll">참여 학생 수 × 3</button></div>
             <p class="hint" data-r="parthint"></p>
             <label class="lbl">학생마다 하트 수</label>
@@ -1491,6 +1481,9 @@ function TeacherSetup(){
               <select id="atkEvery"><option value="0">끄기 (버튼으로만)</option><option value="60">1분마다</option><option value="120">2분마다</option><option value="180">3분마다</option><option value="300">5분마다</option></select></div>
               <div><label class="lbl" for="atkTime">막아 내는 제한 시간</label>
               <select id="atkTime"><option value="8">8초</option><option value="10">10초</option><option value="15">15초</option><option value="20">20초</option></select></div></div>
+            <label class="lbl" for="raidMin">레이드 시간 제한</label>
+            <select id="raidMin">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="${n}">${n}분</option>`).join("")}</select>
+            <p class="hint">시간이 다 되면 레이드가 저절로 끝나고 결과가 나와요. 선생님 화면을 켜 두세요.</p>
             <label class="lbl" for="legN">전설의 포켓몬 선물: 레이드에 성공했을 때, 몇 문제 이상 맞힌 학생에게 줄까요?</label>
             <div class="stepper"><input id="legN" type="number" min="0" max="99" inputmode="numeric" value="${T.legendN}"><span class="hint">문제 (0이면 끄기)</span></div>
             <p class="hint">많이 맞힌 순서대로 이로치가 나올 확률이 있어요. 1위 1%, 2위 0.9%처럼 0.1%씩 낮아지고 가장 낮을 때 0.1%예요.</p>
@@ -1502,9 +1495,10 @@ function TeacherSetup(){
       m.append(el);R=refs(el);
       $("#atkEvery").value=String(T.atkEvery);$("#atkTime").value=String(T.atkTime);
       $("#atkEvery").addEventListener("change",e=>{T.atkEvery=+e.target.value;});
+      $("#raidMin").value=String(T.raidMin);$("#raidMin").addEventListener("change",e=>{T.raidMin=+e.target.value;});
       $("#legN").addEventListener("input",e=>{const v=parseInt(e.target.value);if(v>=0&&v<=99)T.legendN=v;});
       $("#atkTime").addEventListener("change",e=>{T.atkTime=+e.target.value;});
-      $("#hpIn").addEventListener("input",e=>{const v=parseInt(e.target.value);if(v>=1&&v<=99)T.hp=v;});
+      $("#hpIn").addEventListener("input",e=>{const v=parseInt(e.target.value);if(v>=1&&v<=999)T.hp=v;});
       R.list.addEventListener("change",e=>{const c=e.target.closest("input[data-sid]");if(!c)return;
         if(c.checked)T.sel.add(c.dataset.sid);else T.sel.delete(c.dataset.sid);this.update();});
       $("#selAll").addEventListener("change",e=>{T.sel=new Set(e.target.checked?Object.keys(D().students):[]);this.update();});
@@ -1515,7 +1509,7 @@ function TeacherSetup(){
       const {meta,students,room}=D();const list=sorted(students);
       for(const k of [...T.sel])if(!students[k])T.sel.delete(k);
       const on=list.filter(([k])=>isOnline(k)).length;
-      const ready=list.filter(([k,s])=>isOnline(k)&&aliveMons(s).length).length;
+      const ready=list.filter(([k,s])=>isOnline(k)&&arr(s.mons).length).length;
       R.cnt.textContent=`${list.length}명`;
       R.hint.textContent=list.length?`지금 접속 중 ${on}명`:`학생들이 로그인한 뒤 방 코드 ${S.code}를 입력하면 여기에 나와요.`;
       R.gbtn.disabled=!T.sel.size;
@@ -1528,7 +1522,7 @@ function TeacherSetup(){
       setHTML(R.list,list.map(([sid,st])=>{
         const mons=arr(st.mons),used=arr(st.used),all=allUsed(st),online=isOnline(sid);
         const pick=st.pick&&st.pick.raid===(meta.raidNo||0)+1?st.pick.mon:null;
-        const fs=faintSet(st);const icons=mons.map(id=>`<span class="mini${fs.has(id)?" used":""}" title="${esc(monName(st,id))}${fs.has(id)?" (기절)":""}">${spr(id,false,shy(st,id))}</span>`).join("");
+        const icons=mons.map(id=>`<span class="mini" title="${esc(monName(st,id))}">${spr(id,false,shy(st,id))}</span>`).join("");
         return `<div class="srow"><input type="checkbox" data-sid="${sid}" ${T.sel.has(sid)?"checked":""} aria-label="${esc(st.name)} 선택">
           <span class="dot${online?" on":""}" title="${online?"접속 중":"접속 안 함"}"></span>
           <span class="who">${st.num}번 ${esc(st.name)}</span>
@@ -1589,6 +1583,7 @@ function TeacherRaid(){
         <section class="win"><h2>${meta.raidNo}번째 레이드 (참여 ${Object.keys(parts).length}명)</h2>
           <p class="hint">${arr(meta.units).length?arr(meta.units).map(k=>UNITS[k]).filter(Boolean).join(", "):UNITS.dec}</p>
           <p class="hint">하트 ${meta.hearts||5}개, ${every?`${every/60}분마다 자동 공격 (${meta.atkTime||10}초)`:"자동 공격 꺼짐"}</p>
+          <p class="timer" data-r="timer">${meta.endsAt?"":"⏱ 시간 제한 없음"}</p>
           <div class="batbar"><span data-r="next"></span><button class="btn small go" data-act="bossAtk">지금 공격!</button></div>
           <div class="tally" data-r="tally"></div>
           <div class="chips" data-r="chips"></div><button class="btn go big" data-act="endRaid">레이드 종료</button></section>
@@ -1602,6 +1597,8 @@ function TeacherRaid(){
     tick(){
       if(!R||!R.msg.isConnected)return;
       const {meta,hp}=D();if(meta.stage!=="raid")return;
+      if(meta.endsAt){const l=meta.endsAt-Date.now();R.timer.textContent=`⏱ 남은 시간 ${clock(l)}`;R.timer.classList.toggle("bad",l<60000);
+        if(l<=0){R.timer.textContent="⏱ 시간 끝! 결과를 정리하는 중…";ACT.endRaid(null,true);return;}}
       const ba=meta.bossAtk,now=Date.now(),every=(meta.atkEvery||0)*1000;
       if(ba&&!ba.over){
         const left=Math.ceil((ba.dur||10)-(now-ba.at)/1000);
@@ -1622,8 +1619,7 @@ function TeacherRaid(){
       setHTML(R.chips,list.map(([sid,st])=>{
         const a=atts[sid];let cls="idle",txt="포켓몬 고르는 중";
         if(a){tot.ok+=a.ok||0;tot.ng+=a.ng||0;tot.hit+=a.hits||0;
-          const fs=faintSet(st),tm=arr(a.team).length?arr(a.team):[a.mon],alive=tm.filter(x=>!fs.has(x)).length,ko=tm.length-alive;
-          if(a.fainted||!alive){cls="miss";tot.out++;txt=`하트 0, 명중 ${a.hits||0}`;}
+          if(a.out||a.fainted){cls="miss";tot.out++;txt=`하트 0, 명중 ${a.hits||0}`;}
           else{cls=a.hits?"hit":"pending";txt=`${nameOf(a.mon)} 차례, 명중 ${a.hits||0}${a.crit?` (크리 ${a.crit})`:""}`;}}
         return `<div class="chip ${cls}"><span class="dot${isOnline(sid)?" on":""}"></span> ${st.num}번 ${esc(st.name)}<small>${esc(txt)}</small>${a?`<small class="hearts">${hearts(a)}</small>`:""}</div>`;
       }).join(""));
@@ -1653,7 +1649,6 @@ function playNext(R){
   R.mename.textContent=nameOf(ev.mon);R.menum.textContent=ev.who;
   restart(R.me,"lunge");restart(R.foe,ev.hit?"hurt":"dodge");
   R.msg.textContent=ev.hit?`${ev.name}의 ${nameOf(ev.mon)}! 공격이 명중했다!`:`${ev.name}의 ${nameOf(ev.mon)}! 공격이 빗나갔다!`;
-  if(!ev.hit)R.me.classList.add("fainted");
   if(!fast)Snd.cry(ev.mon);setTimeout(()=>Snd.sfx(ev.hit?"hit":"miss"),fast?200:450);
   if(ev.crit){R.msg.textContent=`크리티컬! ${ev.name}의 ${nameOf(ev.mon)}! 급소에 맞아서 두 번 명중했다!`;
     setTimeout(()=>{if(!R.foe.isConnected)return;critFx(R.foe.parentElement);restart(R.me,"lunge");restart(R.foe,"hurt");Snd.sfx("hit");},700);}
@@ -1667,16 +1662,18 @@ function TeacherResult(){let R;return{mount(m){
   m.append(el);R=refs(el);
 },update(){const {room,raid,students}=D(),x=(room.history||{})["r"+raid];if(x)setHTML(R.rep,`<section class="win mt">${reportHTML(x,students)}</section>`);}};}
 function baseIds(){
+  if(!GD.ready)return [];
   const kids=new Set();Object.values(GD.children||{}).forEach(a=>a.forEach(x=>kids.add(+x)));
   const leg=new Set(LEGENDS.map(x=>x[0]));
-  const max=GD.ready?Math.min(1025,Math.max(493,...Object.keys(NAMES).map(Number))):493;
-  const out=[];for(let i=1;i<=max;i++)if(NAMES[i]&&!leg.has(i)&&!kids.has(i))out.push(i);
+  const out=[];for(let i=1;i<=1025;i++){
+    if(!NAMES[i]||kids.has(i)||(GD.par&&GD.par[i])||leg.has(i)||NO_EGG.has(i)||GD.leg.has(i))continue;
+    out.push(i);}
   return out;
 }
 const pct=x=>Math.round(x*100)+"%";
 function giftText(w,boss){
   if(!w)return "";
-  return [w.legend?`${w.shiny?"✨이로치 ":""}${nameOf(boss)}`:"",w.egg?"🥚 포켓몬 알":"",w.evo?"💜 진화의 마음":"",
+  return [w.legend?`${w.shiny?"✨이로치 ":""}${nameOf(boss)}`:"",w.egg?"🥚 포켓몬 알":"",w.deco?"🎁 꾸미기 상자":"",w.atk?"🍬 파워 사탕":"",w.evo?"💜 진화의 마음":"",
     arr(w.hatch).length?`🐣 ${arr(w.hatch).map(nameOf).join(", ")} 부화`:""].filter(Boolean).join(", ");
 }
 function reportHTML(x,students){
@@ -1692,7 +1689,7 @@ function reportHTML(x,students){
   return `<h2>문제 기록</h2><p>반 전체 정확도 <b>${Nn?pct(O/Nn):"-"}</b> (맞힌 문제 ${O} / 푼 문제 ${Nn})</p>${units?`<p class="hint">단원별: ${units}</p>`:""}
     <div class="tablewrap"><table class="rtable"><thead><tr><th>순위</th><th>이름</th><th>맞힌 / 푼 문제</th><th>정확도</th><th>지난 레이드와 비교</th><th>선물</th></tr></thead><tbody>${rows||'<tr><td colspan="6">문제를 푼 학생이 없어요.</td></tr>'}</tbody></table></div>
     ${others.length?`<p class="hint">알이 부화한 다른 친구: ${others.join(" / ")}</p>`:""}
-    <p class="hint">순위는 맞힌 문제 수 × 정확도 점수로 정해요. 1~3위는 포켓몬 알, 정확도가 지난 레이드보다 오른 학생은 진화의 마음을 받아요(3문제 이상 푼 레이드끼리 비교).${x.legendN?` 레이드에 성공하면 ${x.legendN}문제 이상 맞힌 학생은 ${esc(josa(nameOf(x.boss),"을","를"))} 받아요.`:""}</p>`;
+    <p class="hint">순위는 맞힌 문제 수 × 정확도 점수로 정해요. 1~3위는 포켓몬 알, 1문제 이상 맞힌 학생은 꾸미기 상자, 정확도가 지난 레이드보다 오른 학생은 파워 사탕을 받아요(3문제 이상 푼 레이드끼리 비교). 진화의 마음은 오늘의 성장으로만 받을 수 있어요.${x.legendN?` 레이드에 성공하면 ${x.legendN}문제 이상 맞힌 학생은 ${esc(josa(nameOf(x.boss),"을","를"))} 받아요.`:""}</p>`;
 }
 
 /* ---------------- 학생 화면 고르기 ---------------- */
@@ -1701,7 +1698,7 @@ function studentRoute(){
   if(!me){toast("선생님이 이 방 명단에서 뺐어요.");exitRoom();return;}
   if(meta.stage==="raid"){
     if(atts[S.sid])return show("S-battle-"+raid,StudentBattle);
-    if(parts[S.sid]&&aliveMons(me).length)return show("S-pick-"+raid,StudentPick);
+    if(parts[S.sid]&&arr(me.mons).length)return show("S-pick-"+raid,StudentPick);
   }
   if(meta.stage==="result"&&S.ack!==raid)return show("S-result-"+raid,StudentResult);
   const pg=PAGES[S.page]?S.page:"hub";
@@ -1711,7 +1708,7 @@ function studentRoute(){
 async function createAttempt(team){
   const {meta,students,raid,atts}=D();
   if(meta.stage!=="raid"||atts[S.sid]||S.creating===raid)return;
-  const f=faintSet(students[S.sid]);team=team.filter(x=>!f.has(x)).slice(0,6);
+  team=team.filter(x=>arr(students[S.sid].mons).includes(x)).slice(0,6);
   if(!team.length)return toast("출전할 포켓몬을 골라 주세요.");
   S.creating=raid;const H=meta.hearts||5;
   try{
@@ -1779,11 +1776,11 @@ function StudentMons(){
     },
     update(){
       const {meta,students}=D();const st=students[S.sid];
-      const mons=arr(st.mons),rep=repOf(st),fs=faintSet(st);
+      const mons=arr(st.mons),rep=repOf(st);
       R.note.textContent=!mons.length?"아직 받은 포켓몬이 없어요. 선생님께 포켓몬을 받으면 여기에 나타나요."
         :"레이드에서는 최대 6마리까지 함께 싸울 수 있어요.";
       setHTML(R.grid,mons.map(id=>{
-        const u=fs.has(id),p=power(st,id);
+        const u=false,p=power(st,id);
         return `<div class="mcard${u?" used":""}">${spr(id,false,shy(st,id))}<b>${esc(monName(st,id))}</b>
           <span class="pw">공격력 ${powText(p)}</span>${p.total?`<span class="hint">크리티컬 ${(p.total/100).toFixed(2)}%</span>`:""}<span class="hint">${rep===id?"⭐ 대표 포켓몬":"&nbsp;"}</span></div>`;
       }).join(""));
@@ -1920,7 +1917,6 @@ function openUse(k){
   if(k==="deco")return openDeco();
   if(!mons.length)return toast("아직 포켓몬이 없어요.");
   if(k==="evo"&&!GD.ready)return toast(GD.failed?"진화 정보를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.":"진화 정보를 불러오는 중이에요. 잠시 뒤 다시 눌러 주세요.");
-  const fs=faintSet(st);
   openModal(`<h2>${itemIcon(k,32)} ${esc(josa(ITEMS[k].n,"을","를"))} 누구에게 쓸까요?</h2><div class="mons mt">${mons.map(id=>{
     const kids=k==="evo"?(GD.children[id]||[]):[1],dis=!kids.length;
     return `<button class="mon${dis?" used":""}" ${dis?"disabled":""} data-act="useOn" data-k="${k}" data-id="${id}">${spr(id,false,shy(st,id))}<span class="n">${esc(monName(st,id))}</span>
@@ -1952,11 +1948,10 @@ async function evolve(from,to){
   const boosts=Object.assign({},st.boosts||{});const b=boosts["p"+from]||0;delete boosts["p"+from];if(b)boosts["p"+to]=b;
   const sw=x=>x===from?to:x;
   const shn=Object.assign({},st.shiny||{});if(shn["p"+from]){delete shn["p"+from];shn["p"+to]=true;}
-  const fn=Object.assign({},st.fainted||{});if(fn["p"+from]){delete fn["p"+from];fn["p"+to]=true;}
   await Store.update(`rooms/${S.code}/students/${S.sid}`,{
     mons:mons.map(sw),used:arr(st.used).map(sw),rep:st.rep===from?to:(st.rep??null),
     pick:st.pick&&st.pick.mon===from?{raid:st.pick.raid,mon:to}:(st.pick||null),
-    boosts:Object.keys(boosts).length?boosts:null,shiny:Object.keys(shn).length?shn:null,fainted:Object.keys(fn).length?fn:null,"items/evo":n-1,[`dex/p${from}`]:true,[`dex/p${to}`]:true});
+    boosts:Object.keys(boosts).length?boosts:null,shiny:Object.keys(shn).length?shn:null,fainted:null,"items/evo":n-1,[`dex/p${from}`]:true,[`dex/p${to}`]:true});
   openModal(`<div class="center"><h2>어라…?</h2><div class="evobox evoing">${spr(from,false).replace('class="spr"','class="spr e1"')}${spr(to,false).replace('class="spr"','class="spr e2"')}</div>
     <p id="evomsg">${esc(nameOf(from))}의 모습이…!</p><div id="evobtn"></div></div>`);
   Snd.cry(from);
@@ -1985,14 +1980,12 @@ async function openDeco(){
 
 /* ---------------- 학생: 출전 포켓몬 고르기 ---------------- */
 /* ---------------- 학생: 출전 포켓몬 고르기 (최대 6마리) ---------------- */
-const faintSet=st=>new Set();
-const aliveMons=st=>{const f=faintSet(st);return arr(st&&st.mons).filter(x=>!f.has(x));};
 function StudentPick(){
   let R;
   return{
     mount(m){
       const {meta,students}=D();
-      S.team=aliveMons(students[S.sid]).slice(0,6);
+      S.team=arr(students[S.sid].mons).slice(0,6);
       const el=h(`<div><div class="battle solo">${sceneHTML(meta.boss)}<div class="dlg"><div class="in" data-r="msg"></div></div></div>
         <section class="win mt" style="max-width:680px;margin-left:auto;margin-right:auto"><h2>함께 싸울 포켓몬을 골라 주세요 (최대 6마리)</h2>
           <p class="hint" data-r="note"></p><div class="mons mt" data-r="grid"></div>
@@ -2002,10 +1995,10 @@ function StudentPick(){
     },
     update(){
       const {students}=D();const st=students[S.sid];updateFoe(R);
-      const f=faintSet(st),mons=arr(st.mons);S.team=S.team.filter(x=>mons.includes(x)&&!f.has(x));
+      const mons=arr(st.mons);S.team=S.team.filter(x=>mons.includes(x));
       R.note.textContent="문제를 풀 때마다 공격하는 포켓몬이 차례대로 바뀌어요. 문제를 틀리거나 전설의 포켓몬의 공격을 못 막으면 하트가 1개 줄고, 하트가 모두 없어지면 더 공격할 수 없어요.";
-      setHTML(R.grid,mons.map(id=>{const ft=f.has(id),on=S.team.includes(id);
-        return `<button class="mon${ft?" used fainted2":""}${on?" pick":""}" ${ft?"disabled":""} data-act="teamToggle" data-id="${id}">${spr(id,false,shy(st,id))}<span class="n">${esc(monName(st,id))}</span>${on?`<span class="tag">${S.team.indexOf(id)+1}번째</span>`:""}${ft?'<span class="ftag">기절</span>':""}</button>`;}).join(""));
+      setHTML(R.grid,mons.map(id=>{const on=S.team.includes(id);
+        return `<button class="mon${on?" pick":""}" data-act="teamToggle" data-id="${id}">${spr(id,false,shy(st,id))}<span class="n">${esc(monName(st,id))}</span>${on?`<span class="tag">${S.team.indexOf(id)+1}번째</span>`:""}</button>`;}).join(""));
       R.go.disabled=!S.team.length;
       R.go.textContent=S.team.length?`${S.team.length}마리로 출전하기!`:(mons.length?"출전할 포켓몬을 골라 주세요":"포켓몬이 없어요");
     }
@@ -2013,6 +2006,7 @@ function StudentPick(){
 }
 
 /* ---------------- 학생: 배틀 (문제를 계속 풀어요) ---------------- */
+const clock=ms=>{const t=Math.max(0,Math.ceil(ms/1000));return `${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`;};
 const hearts=a=>"♥".repeat(Math.max(0,a.hearts||0))+"♡".repeat(Math.max(0,(a.maxHearts||0)-(a.hearts||0)));
 function StudentBattle(){
   let R,ans="",fv={w:"",n:"",d:""},fa="w",sel=-1,phase=null,shownK=null,shownMon=null,onKey,fbTimer=null;
@@ -2042,21 +2036,20 @@ function StudentBattle(){
     R.pad.innerHTML=padFor(p);drawAns();
   }
   function drawMe(a){
-    const st=meSt(),f=faintSet(st);
+    const st=meSt();
     if(shownMon!==a.mon){shownMon=a.mon;R.me.className="me-spr appear";R.me.innerHTML=spr(a.mon,true,shy(st,a.mon));R.mename.textContent=monName(st,a.mon);}
     setHp(R.mehp,a.hearts||0,a.maxHearts||1);
     R.menum.innerHTML=`<span class="hearts">${hearts(a)}</span> ${esc(S.user.num+"번 "+S.user.name)}`;
     R.score.textContent=`내 명중 ${a.hits||0}번`;
-    setHTML(R.team,teamOf(a).map(id=>`<span class="tm${f.has(id)?" out":""}${id===a.mon?" now":""}" title="${esc(nameOf(id))}">${spr(id,false,shy(st,id))}</span>`).join(""));
+    setHTML(R.team,teamOf(a).map(id=>`<span class="tm${id===a.mon?" now":""}" title="${esc(nameOf(id))}">${spr(id,false,shy(st,id))}</span>`).join(""));
   }
   function render(){
     const {hp}=D(),a=mine();if(!a)return;
     drawMe(a);
     if(phase==="anim"||phase==="fb")return;
-    const alive=teamOf(a).filter(x=>!faintSet(meSt()).has(x));
-    if(a.fainted||!alive.length){
-      if(phase!=="out"){phase="out";R.pad.innerHTML="";R.me.classList.add("fainted");
-        R.msg.innerHTML=a.fainted?`<p class="q">하트를 모두 잃었어요!</p><p class="sub">이번 레이드에서는 더 공격할 수 없어요. 지금까지 ${a.hits||0}번 명중시켰어요. 친구들을 응원해 주세요!</p>`
+    if(a.out||a.fainted){
+      if(phase!=="out"){phase="out";R.pad.innerHTML="";R.me.classList.add("dim");
+        R.msg.innerHTML=a.out||a.fainted?`<p class="q">하트를 모두 잃었어요!</p><p class="sub">이번 레이드에서는 더 공격할 수 없어요. 지금까지 ${a.hits||0}번 명중시켰어요. 친구들을 응원해 주세요!</p>`
           :`<p class="q">더 공격할 수 없어요.</p><p class="sub">지금까지 ${a.hits||0}번 명중시켰어요.</p>`;}
       return;
     }
@@ -2086,10 +2079,14 @@ function StudentBattle(){
     mount(m){
       const {meta,atts}=D();const a=atts[S.sid];
       const el=h(`<div class="battle solo">${sceneHTML(meta.boss,null)}<div class="dlg"><div class="in">
-        <div class="teamrow"><span class="team" data-r="team"></span><span class="score" data-r="score"></span></div><div data-r="msg"></div><div data-r="pad"></div></div></div></div>`);
+        <div class="teamrow"><span class="team" data-r="team"></span><span class="score"><span data-r="score"></span> <b class="stimer" data-r="stimer"></b></span></div><div data-r="msg"></div><div data-r="pad"></div></div></div></div>`);
       m.append(el);R=refs(el);
       R.mebox.hidden=false;
       setTimeout(()=>Snd.cry(a.mon),300);
+      const tk=()=>{const e=D().meta.endsAt;if(!R.stimer.isConnected)return clearInterval(clk);
+        if(!e){R.stimer.textContent="";return;}const l=e-Date.now();R.stimer.textContent=`⏱ ${clock(l)}`;R.stimer.classList.toggle("bad",l<60000);
+        if(l<=0&&phase==="q"){phase="done";R.pad.innerHTML="";R.msg.innerHTML='<p class="q">레이드 시간이 끝났어요!</p><p class="sub">곧 결과가 나와요.</p>';}};
+      const clk=setInterval(tk,1000);tk();
       onKey=e=>{
         if(BA.key){if(/^[0-9]$/.test(e.key))BA.key(e.key);else if(e.key==="Backspace")BA.key("del");else if(e.key==="Enter")BA.key("ok");else return;e.preventDefault();return;}
         if(phase!=="q")return;
@@ -2121,7 +2118,8 @@ function StudentBattle(){
     },
     async submit(){
       const {meta,raid,hp}=D();const a=mine();
-      if(meta.stage!=="raid"||!a||!a.cur||a.fainted||phase!=="q")return;
+      if(meta.stage!=="raid"||!a||!a.cur||a.out||phase!=="q")return;
+      if(meta.endsAt&&Date.now()>=meta.endsAt)return toast("레이드 시간이 끝났어요. 선생님이 결과를 보여 줄 거예요.");
       const p=a.cur,t=p.type||"num";let hit,given;
       if(t==="choice"){if(sel<0)return toast("답을 먼저 골라 주세요.");hit=sel===p.ans;given=arr(p.choices)[sel];}
       else if(t==="frac"){
@@ -2146,7 +2144,7 @@ function StudentBattle(){
       const ap=`attempts/r${raid}/${S.sid}/`;
       const upd={[ap+"hits"]:(a.hits||0)+dmg,[ap+"ok"]:(a.ok||0)+(hit?1:0),[ap+"ng"]:(a.ng||0)+(hit?0:1),[ap+"crit"]:(a.crit||0)+(crit?1:0),
         [ap+"last"]:{at:Date.now(),hit,crit,mon},[ap+"cur"]:next&&hp-dmg>0?{...makeProblem(meta.units),k:p.k+1}:null,
-        [ap+"mon"]:next||mon,[ap+`log/q${p.k}`]:{u:p.u||"dec",ok:hit,mon},[ap+"hearts"]:hs,[ap+"fainted"]:hs<=0};
+        [ap+"mon"]:next||mon,[ap+`log/q${p.k}`]:{u:p.u||"dec",ok:hit,mon},[ap+"hearts"]:hs,[ap+"out"]:hs<=0};
       try{await Store.update("rooms/"+S.code,upd);}
       catch(e){phase="q";question(p);toast("저장하지 못했어요. 다시 공격해 주세요.");return;}
       setTimeout(()=>{if(R.msg.isConnected)feedback(hit,crit,p,given,mon,next,hs);},crit?1500:900);
@@ -2165,7 +2163,7 @@ function simpleQ(){
 }
 function bossCheck(R){
   const {meta,atts,raid}=D(),ba=meta.bossAtk,a=atts[S.sid];
-  if(!ba||ba.over||!a||a.fainted||a.bd===ba.id||BA.id===ba.id)return;
+  if(!ba||ba.over||!a||a.out||a.bd===ba.id||BA.id===ba.id)return;
   BA.id=ba.id;
   const q=simpleQ(),boss=nameOf(meta.boss),path=`rooms/${S.code}/attempts/r${raid}/${S.sid}`;
   let left=ba.dur||10,val="",done=false;
@@ -2184,10 +2182,10 @@ function bossCheck(R){
   async function finish(ok){
     if(done)return;done=true;clearInterval(iv);BA.key=null;
     const cur=D().atts[S.sid]||a,hs=ok?(cur.hearts||0):Math.max(0,(cur.hearts||0)-1);
-    try{await Store.update(path,{bd:ba.id,bdok:ok,hearts:hs,fainted:hs<=0});}catch(e){}
+    try{await Store.update(path,{bd:ba.id,bdok:ok,hearts:hs,out:hs<=0});}catch(e){}
     modal.innerHTML=`<div class="win bossbox center"><h2>${ok?"막아 냈다!":"앗, 하트를 잃었어요"}</h2>
       <p>${ok?"멋져요! 하트를 지켰어요.":`정답은 ${q.a}였어요.`}</p><p class="hearts big2">${hearts({hearts:hs,maxHearts:cur.maxHearts})}</p>
-      ${hs<=0?"<p>하트를 모두 잃어서 포켓몬이 쓰러졌어요.</p>":""}</div>`;
+      ${hs<=0?"<p>하트를 모두 잃었어요. 이번 레이드에서는 더 공격할 수 없어요.</p>":""}</div>`;
     Snd.sfx(ok?"blip":"hit");
     setTimeout(()=>{if(modal.querySelector(".bossbox")){modal.hidden=true;modal.innerHTML="";}},1900);
   }
@@ -2206,14 +2204,13 @@ function StudentResult(){let R,shown=false;return{mount(m){
   if(s){const n=s.ok+s.ng,acc=n?s.ok/n:0;
     html+=`<p class="mt">맞힌 문제 <b>${s.ok}</b> / 푼 문제 ${n} (정확도 <b>${n?pct(acc):"-"}</b>)${rk>=0?`, 순위 <b>${rk+1}위</b>`:""}</p>`;
     if(s.prev!=null&&n>=3)html+=`<p class="hint">지난 레이드 정확도 ${pct(s.prev)} → 이번 ${pct(acc)} ${acc>s.prev+1e-9?"▲ 올랐어요!":acc<s.prev-1e-9?"▼":""}</p>`;
-    if(a){const fs=faintSet(students[S.sid]),ko=(arr(a.team).length?arr(a.team):[a.mon]).filter(x=>fs.has(x));
-      html+=`<p class="hint">남은 하트 ${a.hearts||0}개${a.crit?`, 크리티컬 ${a.crit}번`:""}</p>`;
-}}
+    if(a)html+=`<p class="hint">남은 하트 ${a.hearts||0}개${a.crit?`, 크리티컬 ${a.crit}번`:""}</p>`;}
   else html+=`<p class="mt">${parts[S.sid]?"이번 레이드에는 문제를 풀지 못했어요.":"이번 레이드에는 참여하지 않았어요."}</p>`;
   const g=[];
   if(w.legend)g.push(`<div class="gift${w.shiny?" shiny":""}">${spr(x.boss,false,w.shiny)}<b>${w.shiny?"✨ 이로치 ":""}${esc(nameOf(x.boss))}</b><span>${x.legendN}문제 이상 맞혀서 받았어요!</span></div>`);
   if(w.egg)g.push(`<div class="gift"><div class="ge">${itemIcon("egg",72)}</div><b>포켓몬 알</b><span>${rk+1}위 선물! 다음 레이드가 끝나면 부화해요.</span></div>`);
-  if(w.evo)g.push(`<div class="gift"><div class="ge">${itemIcon("evo",72)}</div><b>진화의 마음</b><span>정확도가 올라서 받았어요!</span></div>`);
+  if(w.atk)g.push(`<div class="gift"><div class="ge">${itemIcon("atk",72)}</div><b>파워 사탕</b><span>정확도가 올라서 받았어요!</span></div>`);
+  if(w.deco)g.push(`<div class="gift"><div class="ge">${itemIcon("deco",72)}</div><b>꾸미기 상자</b><span>문제를 맞혀서 받았어요!</span></div>`);
   arr(w.hatch).forEach(id=>g.push(`<div class="gift">${spr(id,false)}<b>${esc(nameOf(id))}</b><span>알에서 태어났어요!</span></div>`));
   if(g.length)html+=`<h2 class="mt">받은 선물</h2><div class="gifts">${g.join("")}</div>`;
   setHTML(R.mine,html);
@@ -2307,8 +2304,8 @@ const ACT={
   snd(){Snd.cycle();if(S.role)renderBar();else if(S.user)lobbyBar();else homeBar();},
   closeModal(){modal.hidden=true;modal.innerHTML="";T.grant=null;},
   pickBoss(b){T.boss=+b.dataset.id;document.querySelectorAll(".bossgrid button").forEach(x=>x.setAttribute("aria-pressed",String(+x.dataset.id===T.boss)));cur.v.boss&&cur.v.boss();},
-  hpStep(b){T.hp=Math.min(99,Math.max(1,T.hp+(+b.dataset.d)));$("#hpIn").value=T.hp;},
-  hpAll(){const n=sorted(D().students).filter(([k,s])=>isOnline(k)&&aliveMons(s).length).length;T.hp=Math.max(1,Math.min(99,n*3));$("#hpIn").value=T.hp;},
+  hpStep(b){T.hp=Math.min(999,Math.max(1,T.hp+(+b.dataset.d)));$("#hpIn").value=T.hp;},
+  hpAll(){const n=sorted(D().students).filter(([k,s])=>isOnline(k)&&arr(s.mons).length).length;T.hp=Math.max(1,Math.min(999,n*3));$("#hpIn").value=T.hp;},
   heartStep(b){T.hearts=Math.max(1,Math.min(10,T.hearts+(+b.dataset.d)));cur.v.update();},
   async bossAtk(){
     const {meta,hp}=D();if(meta.stage!=="raid")return;
@@ -2320,21 +2317,22 @@ const ACT={
   bakey(b){BA.key&&BA.key(b.dataset.k);},
   async startRaid(){
     const {meta,students}=D();const parts={};
-    sorted(students).forEach(([k,s])=>{if(isOnline(k)&&aliveMons(s).length)parts[k]=true;});
+    sorted(students).forEach(([k,s])=>{if(isOnline(k)&&arr(s.mons).length)parts[k]=true;});
     const n=Object.keys(parts).length;
     if(!n)return toast("접속해 있고 포켓몬이 있는 학생이 없어요.");
     await Store.update(`rooms/${S.code}/meta`,{stage:"raid",raidNo:(meta.raidNo||0)+1,boss:T.boss,maxHp:T.hp,units:T.units,participants:parts,result:null,
-      hearts:T.hearts,atkEvery:T.atkEvery,atkTime:T.atkTime,legendN:T.legendN,bossAtk:null,startedAt:Date.now()});
+      hearts:T.hearts,atkEvery:T.atkEvery,atkTime:T.atkTime,legendN:T.legendN,raidMin:T.raidMin,endsAt:T.raidMin?Date.now()+T.raidMin*60000:null,bossAtk:null,startedAt:Date.now()});
   },
-  async endRaid(){
-    if(!confirm("레이드를 끝낼까요? 모든 화면에 결과와 선물이 나와요."))return;
+  async endRaid(b,auto){
+    if(!auto&&!confirm("레이드를 끝낼까요? 모든 화면에 결과와 선물이 나와요."))return;
+    if(T.ending||D().meta.stage!=="raid")return;T.ending=true;setTimeout(()=>{T.ending=false;},5000);
     const {meta,hits,atts,students}=D(),raid=meta.raidNo,result=hits>=meta.maxHp?"caught":"fled";
     const rows=Object.entries(atts).filter(([k,a])=>a&&students[k]).map(([k,a])=>{const ok=a.ok||0,ng=a.ng||0,n=ok+ng;return {k,ok,ng,n,acc:n?ok/n:0,score:n?ok*ok/n:0};});
     const rank=rows.filter(r=>r.ok>0).sort((x,y)=>y.score-x.score||y.ok-x.ok||x.ng-y.ng);
     const upd={"meta/stage":"result","meta/result":result,"meta/bossAtk":null},rw={},st={},unitSt={};
     const W=k=>rw[k]||(rw[k]={});
     rows.forEach(r=>{const prev=students[r.k].lastAcc;st[r.k]={ok:r.ok,ng:r.ng};if(prev!=null)st[r.k].prev=prev;
-      if(r.n>=3){if(prev!=null&&r.acc>prev+1e-9)W(r.k).evo=1;upd[`students/${r.k}/lastAcc`]=r.acc;}});
+      if(r.ok>0)W(r.k).deco=1;if(r.n>=3){if(prev!=null&&r.acc>prev+1e-9)W(r.k).atk=1;upd[`students/${r.k}/lastAcc`]=r.acc;}});
     Object.values(atts).forEach(a=>{if(a)arr(a.log).forEach(l=>{const u=unitSt[l.u||"dec"]||(unitSt[l.u||"dec"]={ok:0,n:0});u.n++;if(l.ok)u.ok++;});});
     rank.slice(0,3).forEach(r=>{W(r.k).egg=1;});
     const N=meta.legendN||0;
@@ -2343,7 +2341,7 @@ const ACT={
     for(const [k,s] of Object.entries(students)){
       if(!s)continue;const mons=arr(s.mons),own=owned(s),w=rw[k]||{},hatch=[];let changed=false;
       for(const [eid,e] of Object.entries(s.eggs||{})){
-        if(!e||(e.got||0)>=raid)continue;
+        if(!e||(e.got||0)>=raid||!pool.length)continue;
         const c=pool.filter(x=>!own.has(x));
         if(c.length){const id=c[rnd(0,c.length-1)];own.add(id);mons.push(id);hatch.push(id);upd[`students/${k}/dex/p${id}`]=true;changed=true;}
         upd[`students/${k}/eggs/${eid}`]=null;
@@ -2351,7 +2349,8 @@ const ACT={
       if(hatch.length)W(k).hatch=hatch;
       if(w.egg)upd[`students/${k}/eggs/e${raid}`]={got:raid};
       if(w.legend){const b=meta.boss;if(!mons.includes(b)){mons.push(b);changed=true;}upd[`students/${k}/dex/p${b}`]=true;if(w.shiny)upd[`students/${k}/shiny/p${b}`]=true;}
-      if(w.evo)upd[`students/${k}/items/evo`]=((s.items||{}).evo||0)+1;
+      if(w.atk)upd[`students/${k}/items/atk`]=((s.items||{}).atk||0)+1;
+      if(w.deco)upd[`students/${k}/items/deco`]=((s.items||{}).deco||0)+1;
       if(changed)upd[`students/${k}/mons`]=mons;
     }
     upd[`history/r${raid}`]={boss:meta.boss,maxHp:meta.maxHp,hits,result,at:Date.now(),legendN:N,st,rank:rank.map(r=>r.k),units:unitSt,rw};
